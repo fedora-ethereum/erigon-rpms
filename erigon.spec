@@ -8,7 +8,7 @@
 # Erigon version, buildable branch, & commit hash:
 # Current values:
 # GIT_TAG=v2.27.0
-%define spec_pkgver %{?pkgver}%{!?pkgver:2.27.0}
+%define spec_pkgver %{?pkgver}%{!?pkgver:2.37.0}
 # Supplementary files version:
 %define spec_suppl_ver %{?suppl_ver}%{!?suppl_ver:0.2.0}
 # GoLang version:
