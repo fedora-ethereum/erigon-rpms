@@ -9,7 +9,7 @@
 
 Name:           erigon
 Vendor:         Ledgerwatch
-Version:        2.42.0
+Version:        2.43.0
 Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPLv3
@@ -19,7 +19,7 @@ URL:            https://github.com/ledgerwatch/erigon
 Source0:        https://github.com/%{vendor}/%{name}/archive/refs/tags/v%{version}.tar.gz
 Source1:        https://github.com/kaiwetlesen/%{name}-release/archive/refs/tags/v%{spec_suppl_ver}.tar.gz
 
-BuildRequires: libmdbx-devel, binutils, git, curl
+BuildRequires: binutils, git, curl
 %if "%{dist}" == ".el8"
 BuildRequires: gcc-toolset-10-gcc
 BuildRequires: gcc-toolset-10-gcc-c++
@@ -27,6 +27,7 @@ BuildRequires: gcc-toolset-10-gcc-c++
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
 %endif
+BuildRequires: golang
 
 %description
 An implementation of Ethereum (aka "Ethereum execution client"), on the
@@ -48,25 +49,6 @@ if [ -f /opt/rh/gcc-toolset-10/enable ]; then
     . /opt/rh/gcc-toolset-10/enable
     echo "Enabled GCC toolchain v10 for RedHat systems"
 fi
-# Map the uname -m style of MArches to Go variants:
-export mach=$(uname -m | tr '[A-Z]' '[a-z]')
-echo "Detected machine architecture ${mach}"
-if [ "${mach}" == 'x86_64' ]; then
-    go_mach='amd64'
-elif [ "${mach}" == 'i386' ] || [ "${mach}" == 'i686' ]; then
-    go_mach='386'
-elif [ "${mach}" == 'aarch64' ]; then
-	go_mach='arm64'
-else
-	go_mach='unknown'
-fi
-if [ "$go_mach" == 'unknown' ]; then
-	echo "No known Go-machine match for architecture ${mach}"
-	exit -1
-fi
-# Download a temporary Go build chain, and set up a couple useful Go utilities:
-echo "Installing Go v%{spec_go_ver}.${go_mach} into ${PWD}/go for the ${mach} platform"
-curl -sL https://go.dev/dl/go%{spec_go_ver}.linux-${go_mach}.tar.gz | tar -C ${PWD} -xz
 export GOPATH="${PWD}/go"
 export PATH="${GOPATH}/bin:${PATH}"
 go install github.com/cpuguy83/go-md2man@latest
