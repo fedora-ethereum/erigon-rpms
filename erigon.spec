@@ -4,8 +4,6 @@
 
 # Supplementary files version:
 %define spec_suppl_ver %{?suppl_ver}%{!?suppl_ver:0.2.0}
-# GoLang version:
-%define spec_go_ver %{?go_ver}%{!?go_ver:1.19.1}
 
 Name:           erigon
 Vendor:         Ledgerwatch
@@ -20,14 +18,8 @@ Source0:        https://github.com/%{vendor}/%{name}/archive/refs/tags/v%{versio
 Source1:        https://github.com/kaiwetlesen/%{name}-release/archive/refs/tags/v%{spec_suppl_ver}.tar.gz
 
 BuildRequires: binutils, git, curl
-%if "%{dist}" == ".el8"
-BuildRequires: gcc-toolset-10-gcc
-BuildRequires: gcc-toolset-10-gcc-c++
-%else
-BuildRequires: gcc >= 10
-BuildRequires: gcc-c++ >= 10
-%endif
 BuildRequires: golang
+BuildRequires: golang-github-cpuguy83-md2man
 
 %description
 An implementation of Ethereum (aka "Ethereum execution client"), on the
@@ -44,15 +36,12 @@ git init
 git checkout -f -b %{name}-v%{version} tags/v%{version}
 
 %build
-# Enable GCC v10 on older RHELs:
-if [ -f /opt/rh/gcc-toolset-10/enable ]; then
-    . /opt/rh/gcc-toolset-10/enable
-    echo "Enabled GCC toolchain v10 for RedHat systems"
-fi
 export GOPATH="${PWD}/go"
 export PATH="${GOPATH}/bin:${PATH}"
-go install github.com/cpuguy83/go-md2man@latest
-# Switch to the build directory and derive some important values:
+echo "Where are we?"
+pwd
+echo %{_builddir}/%{name}-%{version}
+
 cd %{_builddir}/%{name}-%{version}
 export GIT_COMMIT="$(git rev-parse HEAD)"
 export GIT_BRANCH="%{name}-v%{version}"
