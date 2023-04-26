@@ -17,7 +17,11 @@ URL:            https://github.com/ledgerwatch/erigon
 Source0:        https://github.com/%{vendor}/%{name}/archive/refs/tags/v%{version}.tar.gz
 Source1:        https://github.com/kaiwetlesen/%{name}-release/archive/refs/tags/v%{spec_suppl_ver}.tar.gz
 
-BuildRequires: binutils, git, curl
+BuildRequires: binutils
+BuildRequires: curl
+BuildRequires: gcc >= 10
+BuildRequires: gcc-c++ >= 10
+BuildRequires: git
 BuildRequires: golang
 BuildRequires: golang-github-cpuguy83-md2man
 
