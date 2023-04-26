@@ -42,11 +42,6 @@ git checkout -f -b %{name}-v%{version} tags/v%{version}
 %build
 export GOPATH="${PWD}/go"
 export PATH="${GOPATH}/bin:${PATH}"
-echo "Where are we?"
-pwd
-echo %{_builddir}/%{name}-%{version}
-
-cd %{_builddir}/%{name}-%{version}
 export GIT_COMMIT="$(git rev-parse HEAD)"
 export GIT_BRANCH="%{name}-v%{version}"
 export GIT_TAG="v%{version}"
@@ -68,7 +63,6 @@ done
 # Trash the temporary Go build chain:
 chmod -R ug+w ${GOPATH}
 rm -rf ${GOPATH}
-cd -
 
 
 %install
