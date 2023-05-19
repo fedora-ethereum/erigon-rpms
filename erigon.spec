@@ -7,7 +7,7 @@
 
 Name:           erigon
 Vendor:         Ledgerwatch
-Version:        2.42.0
+Version:        2.43.1
 Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPLv3
