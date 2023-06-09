@@ -3,7 +3,8 @@
 # TODO: rig up debug package support with golang.
 
 # Supplementary files version:
-%define spec_suppl_ver %{?suppl_ver}%{!?suppl_ver:0.2.0}
+#%%define spec_suppl_ver %{?suppl_ver}%{!?suppl_ver:0.2.0}
+%global git_commit f4f10f3b7cad36d6b3e7985cfe974764df53d8f7
 
 Name:           erigon
 Vendor:         Ledgerwatch
@@ -15,13 +16,13 @@ URL:            https://github.com/ledgerwatch/erigon
 
 # File sources:
 Source0:        https://github.com/%{vendor}/%{name}/archive/refs/tags/v%{version}.tar.gz
-Source1:        https://github.com/kaiwetlesen/%{name}-release/archive/refs/tags/v%{spec_suppl_ver}.tar.gz
+#Source1:        https://github.com/kaiwetlesen/%{name}-release/archive/refs/tags/v%{spec_suppl_ver}.tar.gz
 
 BuildRequires: binutils
 BuildRequires: curl
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
-BuildRequires: git
+#BuildRequires: git
 BuildRequires: golang
 BuildRequires: golang-github-cpuguy83-md2man
 
@@ -32,17 +33,17 @@ efficiency frontier, written in Go, compatible with the proof-of-stake merge.
 
 %prep
 # Build fails with GCC Go, so die unless we can set that alternative:
-%autosetup -b 1 -n %{name}-release-%{spec_suppl_ver}
-%autosetup -b 0 -n %{name}-%{version}
+#%%autosetup -b 1 -n %{name}-release-%{spec_suppl_ver}
+%autosetup -n %{name}-%{version}
 # Apply git attributes to release code:
-git clone --bare --depth 1 -b v%{version} https://github.com/%{vendor}/%{name}.git .git
-git init
-git checkout -f -b %{name}-v%{version} tags/v%{version}
+#git clone --bare --depth 1 -b v%{version} https://github.com/%{vendor}/%{name}.git .git
+#git init
+#git checkout -f -b %{name}-v%{version} tags/v%{version}
 
 %build
 export GOPATH="${PWD}/go"
 export PATH="${GOPATH}/bin:${PATH}"
-export GIT_COMMIT="$(git rev-parse HEAD)"
+export GIT_COMMIT="%{git_commit}"
 export GIT_BRANCH="%{name}-v%{version}"
 export GIT_TAG="v%{version}"
 # Begin building:
@@ -67,21 +68,16 @@ rm -rf ${GOPATH}
 
 %install
 %define build_srcdir  %{_builddir}/%{name}-%{version}
-%define suppl_srcdir   %{_builddir}/%{name}-release-%{spec_suppl_ver}
-%{__install} -m 0755 -D -s   %{build_srcdir}/build/bin/*       -t %{buildroot}%{_bindir}
-%{__install} -m 0644 -D      %{build_srcdir}/README.md         -t %{buildroot}%{_datadir}/doc/%{name}
-%{__install} -m 0644 -D      %{build_srcdir}/TESTING.md        -t %{buildroot}%{_datadir}/doc/%{name}
-%{__install} -m 0644 -D      %{build_srcdir}/COPYING*          -t %{buildroot}%{_datadir}/licenses/%{name}
-%{__install} -m 0644 -D      %{build_srcdir}/AUTHORS           -t %{buildroot}%{_datadir}/licenses/%{name}
-%{__install} -m 0644 -D      %{build_srcdir}/%{name}.1.gz      -t %{buildroot}%{_mandir}/man1
-%{__install} -m 0644 -D      %{suppl_srcdir}/units/*.service    -t %{buildroot}%{_prefix}/lib/systemd/system
-%{__install} -m 0644 -D      %{suppl_srcdir}/firewallsvcs/*.xml -t %{buildroot}%{_prefix}/lib/firewalld/services
-%{__install} -m 0644 -D      %{suppl_srcdir}/sysconfig/%{name}  -T %{buildroot}%{_sysconfdir}/sysconfig/%{name}
+%{__install} -m 0755 -D -s   ./build/bin/*       -t %{buildroot}%{_bindir}
+%{__install} -m 0644 -D      ./%{name}.1.gz      -t %{buildroot}%{_mandir}/man1
+%{__install} -m 0644 -D      ./units/*.service    -t %{buildroot}%{_prefix}/lib/systemd/system
+%{__install} -m 0644 -D      ./firewallsvcs/*.xml -t %{buildroot}%{_prefix}/lib/firewalld/services
+%{__install} -m 0644 -D      ./sysconfig/%{name}  -T %{buildroot}%{_sysconfdir}/sysconfig/%{name}
 
 
 %files
-%license COPYING COPYING.LESSER AUTHORS
-%doc README.md TESTING.md
+%license COPYING COPYING.LESSER
+%doc AUTHORS README.md TESTING.md
 %{_bindir}/*
 %{_mandir}/man1/%{name}.1.gz
 %{_prefix}/lib/systemd/system/*
