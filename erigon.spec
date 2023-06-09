@@ -3,7 +3,6 @@
 # TODO: rig up debug package support with golang.
 
 # Supplementary files version:
-#%%define spec_suppl_ver %{?suppl_ver}%{!?suppl_ver:0.2.0}
 %global git_commit f4f10f3b7cad36d6b3e7985cfe974764df53d8f7
 
 Name:           erigon
@@ -16,13 +15,12 @@ URL:            https://github.com/ledgerwatch/erigon
 
 # File sources:
 Source0:        https://github.com/%{vendor}/%{name}/archive/refs/tags/v%{version}.tar.gz
-#Source1:        https://github.com/kaiwetlesen/%{name}-release/archive/refs/tags/v%{spec_suppl_ver}.tar.gz
 
 BuildRequires: binutils
 BuildRequires: curl
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
-#BuildRequires: git
+BuildRequires: git
 BuildRequires: golang
 BuildRequires: golang-github-cpuguy83-md2man
 
@@ -33,12 +31,7 @@ efficiency frontier, written in Go, compatible with the proof-of-stake merge.
 
 %prep
 # Build fails with GCC Go, so die unless we can set that alternative:
-#%%autosetup -b 1 -n %{name}-release-%{spec_suppl_ver}
 %autosetup -n %{name}-%{version}
-# Apply git attributes to release code:
-#git clone --bare --depth 1 -b v%{version} https://github.com/%{vendor}/%{name}.git .git
-#git init
-#git checkout -f -b %{name}-v%{version} tags/v%{version}
 
 %build
 export GOPATH="${PWD}/go"
