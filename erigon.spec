@@ -49,7 +49,7 @@ echo "------------ Building Erigon $GIT_TAG from branch $GIT_BRANCH (commit $GIT
 make %{name} rpcdaemon sentry txpool downloader hack state integration observer rpctest
 echo '# "%{name}" 1 "%{summary}" %{vendor} "User Manuals"' > %{name}.1.md
 cat %{name}.1.md README.md | go-md2man > %{name}.1
-%{__gzip} %{name}.1
+#%%{__gzip} %%{name}.1
 %{__rm} %{name}.1.md
 # Rename binaries with common names to [name]-[binary] scheme:
 cd build/bin
@@ -76,7 +76,7 @@ rm -rf ${GOPATH}
 %license COPYING COPYING.LESSER
 %doc AUTHORS README.md TESTING.md
 %{_bindir}/*
-%{_mandir}/man1/%{name}.1.gz
+%{_mandir}/man1/%{name}.1*
 %{_unitdir}/%{name}.service
 %{_unitdir}/%{name}-*service
 %{_prefix}/lib/firewalld/services/%{name}.xml
