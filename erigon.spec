@@ -25,6 +25,7 @@ BuildRequires: gcc-c++ >= 10
 BuildRequires: git
 BuildRequires: golang
 BuildRequires: golang-github-cpuguy83-md2man
+BuildRequires: systemd-rpm-macros
 Requires: firewalld-filesystem
 
 %description
