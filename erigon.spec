@@ -65,8 +65,8 @@ rm -rf ${GOPATH}
 
 
 %install
-%{__install} -m 0755 -D ./build/bin/*       -t %{buildroot}%{_bindir}
-%{__install} -m 0644 -D ./%{name}.1.gz      -t %{buildroot}%{_mandir}/man1
+%{__install} -m 0755 -D ./build/bin/* -t %{buildroot}%{_bindir}
+%{__install} -m 0644 -D ./%{name}.1   -t %{buildroot}%{_mandir}/man1
 %{__install} -m 0644 -D ./%{name}-rpms-%{version}/units/*.service    -t %{buildroot}%{_prefix}/lib/systemd/system
 %{__install} -m 0644 -D ./%{name}-rpms-%{version}/firewallsvcs/*.xml -t %{buildroot}%{_prefix}/lib/firewalld/services
 %{__install} -m 0644 -D ./%{name}-rpms-%{version}/sysconfig/%{name}  -T %{buildroot}%{_sysconfdir}/sysconfig/%{name}
