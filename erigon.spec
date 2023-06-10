@@ -23,6 +23,7 @@ BuildRequires: gcc-c++ >= 10
 BuildRequires: git
 BuildRequires: golang
 BuildRequires: golang-github-cpuguy83-md2man
+Requires: firewalld-filesystem
 
 %description
 An implementation of Ethereum (aka "Ethereum execution client"), on the
