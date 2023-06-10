@@ -35,7 +35,7 @@ efficiency frontier, written in Go, compatible with the proof-of-stake merge.
 %prep
 # Build fails with GCC Go, so die unless we can set that alternative:
 %autosetup -b 0
-%autosetup -b 1
+%autosetup -a 1 -T -D -n %{name}-%{version}
 
 %build
 export GOPATH="${PWD}/go"
@@ -64,11 +64,11 @@ rm -rf ${GOPATH}
 
 
 %install
-%{__install} -m 0755 -D -s   ./build/bin/*       -t %{buildroot}%{_bindir}
-%{__install} -m 0644 -D      ./%{name}.1.gz      -t %{buildroot}%{_mandir}/man1
-%{__install} -m 0644 -D      ./units/*.service    -t %{buildroot}%{_prefix}/lib/systemd/system
-%{__install} -m 0644 -D      ./firewallsvcs/*.xml -t %{buildroot}%{_prefix}/lib/firewalld/services
-%{__install} -m 0644 -D      ./sysconfig/%{name}  -T %{buildroot}%{_sysconfdir}/sysconfig/%{name}
+%{__install} -m 0755 -D ./build/bin/*       -t %{buildroot}%{_bindir}
+%{__install} -m 0644 -D ./%{name}.1.gz      -t %{buildroot}%{_mandir}/man1
+%{__install} -m 0644 -D ./%{name}-rpms-%{version}/units/*.service    -t %{buildroot}%{_prefix}/lib/systemd/system
+%{__install} -m 0644 -D ./%{name}-rpms-%{version}/firewallsvcs/*.xml -t %{buildroot}%{_prefix}/lib/firewalld/services
+%{__install} -m 0644 -D ./%{name}-rpms-%{version}/sysconfig/%{name}  -T %{buildroot}%{_sysconfdir}/sysconfig/%{name}
 
 
 %files
