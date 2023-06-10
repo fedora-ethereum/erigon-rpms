@@ -4,9 +4,9 @@
 
 # Supplementary files version:
 %global git_commit f4f10f3b7cad36d6b3e7985cfe974764df53d8f7
+%global upstream ledgerwatch
 
 Name:           erigon
-Vendor:         Ledgerwatch
 Version:        2.44.0
 Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
@@ -14,7 +14,9 @@ License:        LGPLv3
 URL:            https://github.com/ledgerwatch/erigon
 
 # File sources:
-Source0:        https://github.com/%{vendor}/%{name}/archive/refs/tags/v%{version}.tar.gz
+Source0:        https://github.com/%{upstream}/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
+Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
+
 
 BuildRequires: binutils
 BuildRequires: curl
@@ -32,7 +34,8 @@ efficiency frontier, written in Go, compatible with the proof-of-stake merge.
 
 %prep
 # Build fails with GCC Go, so die unless we can set that alternative:
-%autosetup -n %{name}-%{version}
+%autosetup -b 0
+%autosetup -b 1
 
 %build
 export GOPATH="${PWD}/go"
