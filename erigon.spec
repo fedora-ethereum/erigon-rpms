@@ -61,7 +61,6 @@ rm -rf ${GOPATH}
 
 
 %install
-%define build_srcdir  %{_builddir}/%{name}-%{version}
 %{__install} -m 0755 -D -s   ./build/bin/*       -t %{buildroot}%{_bindir}
 %{__install} -m 0644 -D      ./%{name}.1.gz      -t %{buildroot}%{_mandir}/man1
 %{__install} -m 0644 -D      ./units/*.service    -t %{buildroot}%{_prefix}/lib/systemd/system
@@ -74,8 +73,10 @@ rm -rf ${GOPATH}
 %doc AUTHORS README.md TESTING.md
 %{_bindir}/*
 %{_mandir}/man1/%{name}.1.gz
-%{_prefix}/lib/systemd/system/*
-%{_prefix}/lib/firewalld/services/*
+%{_unitdir}/%{name}.service
+%{_unitdir}/%{name}-*service
+%{_prefix}/lib/firewalld/services/%{name}.xml
+%{_prefix}/lib/firewalld/services/%{name}-*.xml
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 
 
