@@ -1,5 +1,3 @@
-# Disable the debug package as we don't provide it:
-%global debug_package %{nil}
 # TODO: rig up debug package support with golang.
 
 # Supplementary files version:
@@ -54,7 +52,6 @@ cat %{name}.1.md README.md | go-md2man > %{name}.1
 # Rename binaries with common names to [name]-[binary] scheme:
 cd build/bin
 for binary in *; do
-    %{__strip} --strip-debug --strip-unneeded ${binary}
     if echo ${binary} | grep -qv '^%{name}'; then
         %{__mv} ${binary} %{name}-${binary}
     fi
