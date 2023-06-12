@@ -3,20 +3,19 @@
 # TODO: rig up debug package support with golang.
 
 # Supplementary files version:
-%global git_commit 29f8e97cf7adc0210191a7081ec288cd8aca34b1
-%global upstream ledgerwatch
+%global git_commit 048fe49e4f379829e92116326ed8fcec3c9c8c9a
 
 Name:           erigon
-Version:        2.45.1
+Version:        2.45.2
 Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPLv3
 URL:            https://github.com/ledgerwatch/erigon
 
 # File sources:
-Source0:        https://github.com/%{upstream}/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
+Source0:        https://github.com/ledgerwatch/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
-Patch1:		erigon-0001-Fix-wrong-commit.patch
+#Patch1:		erigon-0001-Fix-wrong-commit.patch
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
 BuildRequires: git
