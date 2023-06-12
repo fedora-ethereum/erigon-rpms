@@ -2,7 +2,6 @@
 %global debug_package %{nil}
 # TODO: rig up debug package support with golang.
 
-# Supplementary files version:
 %global git_commit 048fe49e4f379829e92116326ed8fcec3c9c8c9a
 
 Name:           erigon
@@ -15,7 +14,7 @@ URL:            https://github.com/ledgerwatch/erigon
 # File sources:
 Source0:        https://github.com/ledgerwatch/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
-#Patch1:		erigon-0001-Fix-wrong-commit.patch
+Patch1:		erigon-0001-Fix-wrong-commit.patch
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
 BuildRequires: git
