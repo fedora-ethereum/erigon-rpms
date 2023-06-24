@@ -57,6 +57,8 @@ done
 chmod -R ug+w ${GOPATH}
 rm -rf ${GOPATH}
 
+# And create /var/lib/erigon
+install -dm 0755 %{buildroot}%{_sharedstatedir}/%{name}
 
 %install
 %{__install} -m 0755 -D ./build/bin/* -t %{buildroot}%{_bindir}
@@ -67,7 +69,7 @@ rm -rf ${GOPATH}
 
 %pre
 getent group %{name} > /dev/null || groupadd -r %{name}
-getent passwd %{name} > /dev/null || useradd -r -g %{name} -m -d %{_sharedstatedir}/%{name} -s /sbin/nologin -k /dev/null  -c "erigon user" %{name}
+getent passwd %{name} > /dev/null || useradd -r -g %{name} -d %{_sharedstatedir}/%{name} -s /sbin/nologin -c "erigon user" %{name}
 
 %post
 #%%systemd_post et.service
