@@ -57,15 +57,15 @@ done
 chmod -R ug+w ${GOPATH}
 rm -rf ${GOPATH}
 
-# And create /var/lib/erigon
-install -dm 0755 %{buildroot}%{_sharedstatedir}/%{name}
-
 %install
 %{__install} -m 0755 -D ./build/bin/* -t %{buildroot}%{_bindir}
 %{__install} -m 0644 -D ./%{name}.1   -t %{buildroot}%{_mandir}/man1
 %{__install} -m 0644 -D ./%{name}-rpms-%{version}/units/*.service    -t %{buildroot}%{_prefix}/lib/systemd/system
 %{__install} -m 0644 -D ./%{name}-rpms-%{version}/firewallsvcs/*.xml -t %{buildroot}%{_prefix}/lib/firewalld/services
 %{__install} -m 0644 -D ./%{name}-rpms-%{version}/sysconfig/%{name}  -T %{buildroot}%{_sysconfdir}/sysconfig/%{name}
+# And create /var/lib/erigon
+%{__install} -d %{buildroot}%{_sharedstatedir}/%{name}
+
 
 %pre
 getent group %{name} > /dev/null || groupadd -r %{name}
