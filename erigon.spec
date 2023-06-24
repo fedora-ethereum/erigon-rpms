@@ -5,7 +5,7 @@
 %global git_commit 048fe49e4f379829e92116326ed8fcec3c9c8c9a
 
 Name:           erigon
-Version:        2.45.2
+Version:        2.47.0
 Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPLv3
@@ -66,6 +66,21 @@ rm -rf ${GOPATH}
 %{__install} -m 0644 -D ./%{name}-rpms-%{version}/firewallsvcs/*.xml -t %{buildroot}%{_prefix}/lib/firewalld/services
 %{__install} -m 0644 -D ./%{name}-rpms-%{version}/sysconfig/%{name}  -T %{buildroot}%{_sysconfdir}/sysconfig/%{name}
 
+%pre
+getent group %{name} > /dev/null || groupadd -r %{name}
+getent passwd %{name} > /dev/null || useradd -r -g %{name} -m -d %{_sharedstatedir}/%{name} -s /sbin/nologin -k /dev/null  -c "erigon user" %{name}
+
+%post
+#%%systemd_post et.service
+%firewalld_reload
+
+%preun
+#%%systemd_preun et.service
+
+%postun
+#%%systemd_postun_with_restart et.service
+%firewalld_reload
+
 
 %files
 %license COPYING COPYING.LESSER
@@ -77,15 +92,7 @@ rm -rf ${GOPATH}
 %{_prefix}/lib/firewalld/services/%{name}.xml
 %{_prefix}/lib/firewalld/services/%{name}-*.xml
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
-
-
-%pre
-if ! getent group %{name} &> /dev/null; then
-    groupadd -r %{name}
-fi
-if ! getent passwd %{name} &> /dev/null; then
-    useradd -r -g %{name} -m -d %{_sharedstatedir}/%{name} -k /dev/null %{name}
-fi
+%dir %attr(-,%{name},%{name}) %{_sharedstatedir}/%{name}
 
 
 %changelog
