@@ -1,0 +1,19 @@
+From: Peter Lemenkov <lemenkov@gmail.com>
+Date: Sat, 9 Sep 2023 18:10:37 +0200
+Subject: [PATCH] Fix wrong commit
+
+Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
+
+diff --git a/go.mod b/go.mod
+index 71313f99a..2adc8b63f 100644
+--- a/go.mod
++++ b/go.mod
+@@ -4,7 +4,7 @@ go 1.19
+ 
+ require (
+ 	github.com/erigontech/mdbx-go v0.27.14
+-	github.com/ledgerwatch/erigon-lib v0.0.0-20230906031217-cb36bf043c5c
++	github.com/ledgerwatch/erigon-lib v0.0.0-20230906101900-dde477f60387
+ 	github.com/ledgerwatch/erigon-snapshot v1.2.1-0.20230818153427-cc16b83a89be
+ 	github.com/ledgerwatch/log/v3 v3.9.0
+ 	github.com/ledgerwatch/secp256k1 v1.0.0
