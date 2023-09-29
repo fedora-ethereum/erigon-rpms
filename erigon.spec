@@ -5,7 +5,7 @@
 %global git_commit 034ef6381859a80799814f0b3e10baac9a2cf7db
 
 Name:           erigon
-Version:        2.49.0
+Version:        2.50.1
 Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPLv3
@@ -14,7 +14,7 @@ URL:            https://github.com/ledgerwatch/erigon
 # File sources:
 Source0:        https://github.com/ledgerwatch/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
-patch1:		erigon-0001-Fix-wrong-commit.patch
+#Patch1:		erigon-0001-Fix-wrong-commit.patch
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
 BuildRequires: git
