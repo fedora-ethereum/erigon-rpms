@@ -14,7 +14,9 @@ URL:            https://github.com/ledgerwatch/erigon
 # File sources:
 Source0:        https://github.com/ledgerwatch/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
-#Patch1:		erigon-0001-Fix-wrong-commit.patch
+%if 0%{?fedora} >= 39
+Patch1:		erigon-0001-Upgrade-quick-go-for-Golang-1.21.x.patch
+%endif
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
 BuildRequires: git
