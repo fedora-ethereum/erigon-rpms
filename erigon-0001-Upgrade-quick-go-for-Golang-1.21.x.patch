@@ -5,7 +5,7 @@ Subject: [PATCH] Upgrade quick-go for Golang 1.21.x
 Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
 
 diff --git a/go.mod b/go.mod
-index 757cb0f11..3b4374fcb 100644
+index 757cb0f11..244e6e182 100644
 --- a/go.mod
 +++ b/go.mod
 @@ -228,9 +228,8 @@ require (
@@ -15,13 +15,13 @@ index 757cb0f11..3b4374fcb 100644
 -	github.com/quic-go/qtls-go1-19 v0.3.3 // indirect
 -	github.com/quic-go/qtls-go1-20 v0.2.3 // indirect
 -	github.com/quic-go/quic-go v0.33.0 // indirect
-+	github.com/quic-go/qtls-go1-20 v0.3.0 // indirect
-+	github.com/quic-go/quic-go v0.37.0 // indirect
++	github.com/quic-go/qtls-go1-20 v0.3.2 // indirect
++	github.com/quic-go/quic-go v0.38.0 // indirect
  	github.com/quic-go/webtransport-go v0.5.3 // indirect
  	github.com/raulk/go-watchdog v1.3.0 // indirect
  	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 diff --git a/go.sum b/go.sum
-index 615b981b7..743daaa79 100644
+index 615b981b7..d7005df4c 100644
 --- a/go.sum
 +++ b/go.sum
 @@ -734,12 +734,10 @@ github.com/quasilyte/go-ruleguard/dsl v0.3.22 h1:wd8zkOhSNr+I+8Qeciml08ivDt1pSXe
@@ -34,10 +34,10 @@ index 615b981b7..743daaa79 100644
 -github.com/quic-go/qtls-go1-20 v0.2.3/go.mod h1:JKtK6mjbAVcUTN/9jZpvLbGxvdWIKS8uT7EiStoU1SM=
 -github.com/quic-go/quic-go v0.33.0 h1:ItNoTDN/Fm/zBlq769lLJc8ECe9gYaW40veHCCco7y0=
 -github.com/quic-go/quic-go v0.33.0/go.mod h1:YMuhaAV9/jIu0XclDXwZPAsP/2Kgr5yMYhe9oxhhOFA=
-+github.com/quic-go/qtls-go1-20 v0.3.0 h1:NrCXmDl8BddZwO67vlvEpBTwT89bJfKYygxv4HQvuDk=
-+github.com/quic-go/qtls-go1-20 v0.3.0/go.mod h1:X9Nh97ZL80Z+bX/gUXMbipO6OxdiDi58b/fMC9mAL+k=
-+github.com/quic-go/quic-go v0.37.0 h1:wf/Ym2yeWi98oQn4ahiBSqdnaXVxNQGj2oBQFgiVChc=
-+github.com/quic-go/quic-go v0.37.0/go.mod h1:XtCUOCALTTWbPyd0IxFfHf6h0sEMubRFvEYHl3QxKw8=
++github.com/quic-go/qtls-go1-20 v0.3.2 h1:rRgN3WfnKbyik4dBV8A6girlJVxGand/d+jVKbQq5GI=
++github.com/quic-go/qtls-go1-20 v0.3.2/go.mod h1:X9Nh97ZL80Z+bX/gUXMbipO6OxdiDi58b/fMC9mAL+k=
++github.com/quic-go/quic-go v0.38.0 h1:T45lASr5q/TrVwt+jrVccmqHhPL2XuSyoCLVCpfOSLc=
++github.com/quic-go/quic-go v0.38.0/go.mod h1:MPCuRq7KBK2hNcfKj/1iD1BGuN3eAYMeNxp3T42LRUg=
  github.com/quic-go/webtransport-go v0.5.3 h1:5XMlzemqB4qmOlgIus5zB45AcZ2kCgCy2EptUrfOPWU=
  github.com/quic-go/webtransport-go v0.5.3/go.mod h1:OhmmgJIzTTqXK5xvtuX0oBpLV2GkLWNDA+UeTGJXErU=
  github.com/raulk/go-watchdog v1.3.0 h1:oUmdlHxdkXRJlwfG0O9omj8ukerm8MEQavSiDTEtBsk=
