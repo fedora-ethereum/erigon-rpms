@@ -15,6 +15,7 @@ URL:            https://github.com/ledgerwatch/erigon
 Source0:        https://github.com/ledgerwatch/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
 Patch1:		erigon-0001-Upgrade-quick-go-for-Golang-1.21.x.patch
+patch2:		erigon-0002-Remove-support-for-libp2p-p2p-mplex.patch
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
 BuildRequires: git
@@ -32,7 +33,7 @@ efficiency frontier, written in Go, compatible with the proof-of-stake merge.
 # Build fails with GCC Go, so die unless we can set that alternative:
 %autosetup -b 0 -p1 -N
 %if 0%{?fedora} >= 39
-%patch -p1 -P 1
+%patch -p1 -P 1 2
 %endif
 %setup -a 1 -T -D -n %{name}-%{version}
 

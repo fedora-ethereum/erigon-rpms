@@ -1,0 +1,33 @@
+From: Peter Lemenkov <lemenkov@gmail.com>
+Date: Sat, 30 Sep 2023 19:42:46 +0200
+Subject: [PATCH] Remove support for libp2p/p2p/mplex
+
+See the following tickets for further details:
+
+* libp2p/specs#553
+* libp2p/go-libp2p#2498
+
+Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
+
+diff --git a/cmd/sentinel/sentinel/config.go b/cmd/sentinel/sentinel/config.go
+index 96af15c85..130c2cdfe 100644
+--- a/cmd/sentinel/sentinel/config.go
++++ b/cmd/sentinel/sentinel/config.go
+@@ -22,7 +22,7 @@ import (
+ 	"github.com/ledgerwatch/log/v3"
+ 	"github.com/libp2p/go-libp2p"
+ 	"github.com/libp2p/go-libp2p/core/crypto"
+-	"github.com/libp2p/go-libp2p/p2p/muxer/mplex"
++	"github.com/libp2p/go-libp2p/p2p/muxer/yamux"
+ 	"github.com/libp2p/go-libp2p/p2p/security/noise"
+ 	"github.com/libp2p/go-libp2p/p2p/transport/tcp"
+ 	"github.com/multiformats/go-multiaddr"
+@@ -99,7 +99,7 @@ func buildOptions(cfg *SentinelConfig, s *Sentinel) ([]libp2p.Option, error) {
+ 		libp2p.ListenAddrs(listen),
+ 		libp2p.UserAgent("erigon/caplin"),
+ 		libp2p.Transport(tcp.NewTCPTransport),
+-		libp2p.Muxer("/mplex/6.7.0", mplex.DefaultTransport),
++		libp2p.Muxer("/yamux/1.0.0", yamux.DefaultTransport),
+ 		libp2p.DefaultMuxers,
+ 	}
+ 
