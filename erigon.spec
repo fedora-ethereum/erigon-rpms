@@ -14,9 +14,7 @@ URL:            https://github.com/ledgerwatch/erigon
 # File sources:
 Source0:        https://github.com/ledgerwatch/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
-%if 0%{?fedora} >= 39
 Patch1:		erigon-0001-Upgrade-quick-go-for-Golang-1.21.x.patch
-%endif
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
 BuildRequires: git
@@ -32,7 +30,10 @@ efficiency frontier, written in Go, compatible with the proof-of-stake merge.
 
 %prep
 # Build fails with GCC Go, so die unless we can set that alternative:
-%autosetup -b 0 -p1
+%autosetup -b 0 -p1 -N
+%if 0%{?fedora} >= 39
+%patch -p1 -P 1
+%endif
 %setup -a 1 -T -D -n %{name}-%{version}
 
 %build
