@@ -19,6 +19,7 @@ BuildRequires: gcc-c++ >= 10
 BuildRequires: git
 BuildRequires: golang
 BuildRequires: golang-github-cpuguy83-md2man
+BuildRequires: sed
 BuildRequires: systemd-rpm-macros
 Requires: firewalld-filesystem
 
@@ -31,6 +32,7 @@ efficiency frontier, written in Go, compatible with the proof-of-stake merge.
 # Build fails with GCC Go, so die unless we can set that alternative:
 %autosetup -b 0 -p1
 %setup -a 1 -T -D -n %{name}-%{version}
+sed -i -e "/go mod vendor/d" Makefile
 
 %build
 export GOPATH="${PWD}/go"
