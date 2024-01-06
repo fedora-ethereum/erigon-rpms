@@ -68,7 +68,7 @@ rm -rf ${GOPATH}
 %{__install} -m 0644 -D ./%{name}-rpms-%{version}/firewallsvcs/*.xml -t %{buildroot}%{_prefix}/lib/firewalld/services
 %{__install} -m 0644 -D ./%{name}-rpms-%{version}/sysconfig/%{name}  -T %{buildroot}%{_sysconfdir}/sysconfig/%{name}
 #%%{__install} -m 0644 -D ./%{name}-rpms-%{version}/tmpfiles/%{name}.conf  -T %{buildroot}%{_tmpfilesdir}/%{name}.conf
-%%{__install} -m 0644 %{SOURCE2}  -T %{buildroot}%{_tmpfilesdir}/%{name}.conf
+%{__install} -m 0644 %{SOURCE2}  -T %{buildroot}%{_tmpfilesdir}/%{name}.conf
 # And create /var/lib/erigon
 %{__install} -d %{buildroot}%{_sharedstatedir}/%{name}
 
