@@ -65,6 +65,7 @@ rm -rf ${GOPATH}
 %{__install} -m 0644 -D ./%{name}-rpms-%{version}/units/*.service    -t %{buildroot}%{_prefix}/lib/systemd/system
 %{__install} -m 0644 -D ./%{name}-rpms-%{version}/firewallsvcs/*.xml -t %{buildroot}%{_prefix}/lib/firewalld/services
 %{__install} -m 0644 -D ./%{name}-rpms-%{version}/sysconfig/%{name}  -T %{buildroot}%{_sysconfdir}/sysconfig/%{name}
+%{__install} -m 0644 -D ./%{name}-rpms-%{version}/tmpfiles/%{name}.conf  -T %{buildroot}%{_tmpfilesdir}/%{name}.conf
 # And create /var/lib/erigon
 %{__install} -d %{buildroot}%{_sharedstatedir}/%{name}
 
@@ -90,10 +91,11 @@ getent passwd %{name} > /dev/null || useradd -r -g %{name} -d %{_sharedstatedir}
 %doc AUTHORS README.md TESTING.md
 %{_bindir}/*
 %{_mandir}/man1/%{name}.1*
-%{_unitdir}/%{name}.service
-%{_unitdir}/%{name}-*service
-%{_prefix}/lib/firewalld/services/%{name}.xml
 %{_prefix}/lib/firewalld/services/%{name}-*.xml
+%{_prefix}/lib/firewalld/services/%{name}.xml
+%{_tmpfilesdir}/%{name}.conf
+%{_unitdir}/%{name}-*service
+%{_unitdir}/%{name}.service
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %dir %attr(-,%{name},%{name}) %{_sharedstatedir}/%{name}
 
