@@ -15,6 +15,7 @@ URL:            https://github.com/ledgerwatch/erigon
 Source0:        https://github.com/ledgerwatch/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
 Patch1:		erigon-0001-Fix-FTBFS.patch
+Patch2:		erigon-0002-Rpath-is-not-allowed.patch
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
 BuildRequires: git
