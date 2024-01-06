@@ -62,15 +62,15 @@ chmod -R ug+w ${GOPATH}
 rm -rf ${GOPATH}
 
 %install
-%{__install} -m 0755 -D ./build/bin/* -t %{buildroot}%{_bindir}
-%{__install} -m 0644 -D ./%{name}.1   -t %{buildroot}%{_mandir}/man1
-%{__install} -m 0644 -D ./%{name}-rpms-%{version}/units/*.service    -t %{buildroot}%{_prefix}/lib/systemd/system
-%{__install} -m 0644 -D ./%{name}-rpms-%{version}/firewallsvcs/*.xml -t %{buildroot}%{_prefix}/lib/firewalld/services
-%{__install} -m 0644 -D ./%{name}-rpms-%{version}/sysconfig/%{name}  -T %{buildroot}%{_sysconfdir}/sysconfig/%{name}
-#%%{__install} -m 0644 -D ./%{name}-rpms-%{version}/tmpfiles/%{name}.conf  -T %{buildroot}%{_tmpfilesdir}/%{name}.conf
-%{__install} -m 0644 %{SOURCE2}  -T %{buildroot}%{_tmpfilesdir}/%{name}.conf
+install -m 0755 -D ./build/bin/* -t %{buildroot}%{_bindir}
+install -m 0644 -D ./%{name}.1   -t %{buildroot}%{_mandir}/man1
+install -m 0644 -D ./%{name}-rpms-%{version}/units/*.service    -t %{buildroot}%{_prefix}/lib/systemd/system
+install -m 0644 -D ./%{name}-rpms-%{version}/firewallsvcs/*.xml -t %{buildroot}%{_prefix}/lib/firewalld/services
+install -m 0644 -D ./%{name}-rpms-%{version}/sysconfig/%{name}  -T %{buildroot}%{_sysconfdir}/sysconfig/%{name}
+#install -m 0644 -D ./%{name}-rpms-%{version}/tmpfiles/%{name}.conf  -T %{buildroot}%{_tmpfilesdir}/%{name}.conf
+install -D -m 0644 -p %{SOURCE2} %{buildroot}%{_tmpfilesdir}/%{name}.conf
 # And create /var/lib/erigon
-%{__install} -d %{buildroot}%{_sharedstatedir}/%{name}
+install -d %{buildroot}%{_sharedstatedir}/%{name}
 
 
 %pre
