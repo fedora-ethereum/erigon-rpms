@@ -2,10 +2,10 @@
 %global debug_package %{nil}
 # TODO: rig up debug package support with golang.
 
-%global git_commit 12889fd007a290c628c9a66e990c316bc5839eb1
+%global git_commit d079008d5901117410e2d471a591748b16720966
 
 Name:           erigon
-Version:        2.55.1
+Version:        2.56.1
 Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPLv3
@@ -14,8 +14,8 @@ URL:            https://github.com/ledgerwatch/erigon
 # File sources:
 Source0:        https://github.com/ledgerwatch/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
-# FIXME remove in the next release / tag
-Source2:	erigon.tmpfiles.conf
+Patch1:		erigon-0001-Fix-FTBFS.patch
+Patch2:		erigon-0002-Revert-silkworm-use-silkworm-go-bindings-8829.patch
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
 BuildRequires: git
@@ -67,8 +67,7 @@ install -m 0644 -D ./%{name}.1   -t %{buildroot}%{_mandir}/man1
 install -m 0644 -D ./%{name}-rpms-%{version}/units/*.service    -t %{buildroot}%{_prefix}/lib/systemd/system
 install -m 0644 -D ./%{name}-rpms-%{version}/firewallsvcs/*.xml -t %{buildroot}%{_prefix}/lib/firewalld/services
 install -m 0644 -D ./%{name}-rpms-%{version}/sysconfig/%{name}  -T %{buildroot}%{_sysconfdir}/sysconfig/%{name}
-#install -m 0644 -D ./%{name}-rpms-%{version}/tmpfiles/%{name}.conf  -T %{buildroot}%{_tmpfilesdir}/%{name}.conf
-install -D -m 0644 -p %{SOURCE2} %{buildroot}%{_tmpfilesdir}/%{name}.conf
+install -m 0644 -p -D ./%{name}-rpms-%{version}/tmpfiles/%{name}.conf  -T %{buildroot}%{_tmpfilesdir}/%{name}.conf
 # And create /var/lib/erigon
 install -d %{buildroot}%{_sharedstatedir}/%{name}
 
