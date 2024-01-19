@@ -1,0 +1,1185 @@
+From: Peter Lemenkov <lemenkov@gmail.com>
+Date: Sat, 6 Jan 2024 14:38:48 +0100
+Subject: [PATCH] Revert "silkworm: use silkworm-go bindings (#8829)"
+
+This reverts commit bc0b727fc099b1d3c1eef706107b072edb9a9b86.
+
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 85bac65709..a9e1bc1b9c 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -112,7 +112,7 @@ jobs:
+   docker-build-check:
+     # don't run this on devel - the PR must have run it to be merged and it misleads that this pushes the docker image
+     if: (${{ github.event_name == 'push' || !github.event.pull_request.draft }}) && ${{ github.ref != 'refs/heads/devel' }}
+-    runs-on: ubuntu-22.04
++    runs-on: ubuntu-20.04
+     steps:
+       - uses: AutoModality/action-clean@v1
+       - uses: actions/checkout@v3
+@@ -128,7 +128,7 @@ jobs:
+ 
+ #  automated-tests:
+ #    runs-on:
+-#      ubuntu-22.04
++#      ubuntu-20.04
+ #    if: ${{ github.event_name == 'push' || !github.event.pull_request.draft }}
+ #    steps:
+ #      - uses: actions/checkout@v3
+diff --git a/.github/workflows/test-integration-caplin.yml b/.github/workflows/test-integration-caplin.yml
+index ca687f6df7..4036419771 100644
+--- a/.github/workflows/test-integration-caplin.yml
++++ b/.github/workflows/test-integration-caplin.yml
+@@ -21,7 +21,8 @@ jobs:
+     strategy:
+       matrix:
+ #        disable macos-11 until https://github.com/ledgerwatch/erigon/issues/8789
+-        os: [ ubuntu-22.04 ] # list of os: https://github.com/actions/virtual-environments
++#        os: [ ubuntu-20.04, macos-11 ] # list of os: https://github.com/actions/virtual-environments
++        os: [ ubuntu-20.04 ] # list of os: https://github.com/actions/virtual-environments
+     runs-on: ${{ matrix.os }}
+ 
+     steps:
+diff --git a/Dockerfile b/Dockerfile
+index e9850144a8..77a7ddca25 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -15,7 +15,7 @@ ADD . .
+ RUN --mount=type=cache,target=/root/.cache \
+     --mount=type=cache,target=/tmp/go-build \
+     --mount=type=cache,target=/go/pkg/mod \
+-    make BUILD_TAGS=nosqlite,noboltdb,nosilkworm all
++    make all
+ 
+ 
+ FROM docker.io/library/golang:1.20-alpine3.17 AS tools-builder
+diff --git a/Makefile b/Makefile
+index 7ab3fb4248..45ec2f84dc 100644
+--- a/Makefile
++++ b/Makefile
+@@ -236,16 +236,6 @@ git-submodules:
+ 	@git submodule sync --quiet --recursive || true
+ 	@git submodule update --quiet --init --recursive --force || true
+ 
+-## install:                            copies binaries and libraries to DIST
+-DIST ?= $(CURDIR)/build/dist
+-.PHONY: install
+-install:
+-	mkdir -p "$(DIST)"
+-	cp -f "$$($(CURDIR)/turbo/silkworm/silkworm_lib_path.sh)" "$(DIST)"
+-	cp -f "$(GOBIN)/"* "$(DIST)"
+-	@echo "Copied files to $(DIST):"
+-	@ls -al "$(DIST)"
+-
+ PACKAGE_NAME          := github.com/ledgerwatch/erigon
+ GOLANG_CROSS_VERSION  ?= v1.20.7
+ 
+diff --git a/cmd/utils/flags.go b/cmd/utils/flags.go
+index 23bb4fa55c..2c5ff7e261 100644
+--- a/cmd/utils/flags.go
++++ b/cmd/utils/flags.go
+@@ -848,6 +848,11 @@ var (
+ 		Usage: "Comma separated list of support session ids to connect to",
+ 	}
+ 
++	SilkwormLibraryPathFlag = cli.StringFlag{
++		Name:  "silkworm.libpath",
++		Usage: "Path to the Silkworm library",
++		Value: "",
++	}
+ 	SilkwormExecutionFlag = cli.BoolFlag{
+ 		Name:  "silkworm.exec",
+ 		Usage: "Enable Silkworm block execution",
+@@ -860,7 +865,6 @@ var (
+ 		Name:  "silkworm.sentry",
+ 		Usage: "Enable embedded Silkworm Sentry service",
+ 	}
+-
+ 	BeaconAPIFlag = cli.BoolFlag{
+ 		Name:  "beacon.api",
+ 		Usage: "Enable beacon API",
+@@ -1563,7 +1567,10 @@ func setCaplin(ctx *cli.Context, cfg *ethconfig.Config) {
+ }
+ 
+ func setSilkworm(ctx *cli.Context, cfg *ethconfig.Config) {
+-	cfg.SilkwormExecution = ctx.Bool(SilkwormExecutionFlag.Name)
++	cfg.SilkwormLibraryPath = ctx.String(SilkwormLibraryPathFlag.Name)
++	if ctx.IsSet(SilkwormExecutionFlag.Name) {
++		cfg.SilkwormExecution = ctx.Bool(SilkwormExecutionFlag.Name)
++	}
+ 	cfg.SilkwormRpcDaemon = ctx.Bool(SilkwormRpcDaemonFlag.Name)
+ 	cfg.SilkwormSentry = ctx.Bool(SilkwormSentryFlag.Name)
+ }
+diff --git a/eth/backend.go b/eth/backend.go
+index 9d24aabaf2..d309553f06 100644
+--- a/eth/backend.go
++++ b/eth/backend.go
+@@ -346,8 +346,8 @@ func New(ctx context.Context, stack *node.Node, config *ethconfig.Config, logger
+ 
+ 	backend.gasPrice, _ = uint256.FromBig(config.Miner.GasPrice)
+ 
+-	if config.SilkwormExecution || config.SilkwormRpcDaemon || config.SilkwormSentry {
+-		backend.silkworm, err = silkworm.New(config.Dirs.DataDir)
++	if config.SilkwormLibraryPath != "" {
++		backend.silkworm, err = silkworm.New(config.SilkwormLibraryPath, config.Dirs.DataDir)
+ 		if err != nil {
+ 			return nil, err
+ 		}
+@@ -388,7 +388,7 @@ func New(ctx context.Context, stack *node.Node, config *ethconfig.Config, logger
+ 			MaxPeers:    p2pConfig.MaxPeers,
+ 		}
+ 
+-		silkwormSentryService := silkworm.NewSentryService(backend.silkworm, settings)
++		silkwormSentryService := backend.silkworm.NewSentryService(settings)
+ 		backend.silkwormSentryService = &silkwormSentryService
+ 
+ 		sentryClient, err := sentry_multi_client.GrpcClient(backend.sentryCtx, apiAddr)
+@@ -918,7 +918,7 @@ func (s *Ethereum) Init(stack *node.Node, config *ethconfig.Config) error {
+ 	s.apiList = jsonrpc.APIList(chainKv, ethRpcClient, txPoolRpcClient, miningRpcClient, ff, stateCache, blockReader, s.agg, &httpRpcCfg, s.engine, s.logger)
+ 
+ 	if config.SilkwormRpcDaemon && httpRpcCfg.Enabled {
+-		silkwormRPCDaemonService := silkworm.NewRpcDaemonService(s.silkworm, chainKv)
++		silkwormRPCDaemonService := s.silkworm.NewRpcDaemonService(chainKv)
+ 		s.silkwormRPCDaemonService = &silkwormRPCDaemonService
+ 	} else {
+ 		go func() {
+@@ -1459,9 +1459,7 @@ func (s *Ethereum) Stop() error {
+ 		}
+ 	}
+ 	if s.silkworm != nil {
+-		if err := s.silkworm.Close(); err != nil {
+-			s.logger.Error("silkworm.Close error", "err", err)
+-		}
++		s.silkworm.Close()
+ 	}
+ 
+ 	return nil
+diff --git a/eth/ethconfig/config.go b/eth/ethconfig/config.go
+index a66e54cf44..640a807c76 100644
+--- a/eth/ethconfig/config.go
++++ b/eth/ethconfig/config.go
+@@ -105,6 +105,9 @@ var Defaults = Config{
+ 		KeepBlocks: false,
+ 		Produce:    true,
+ 	},
++
++	// applies if SilkwormLibraryPath is set
++	SilkwormExecution: true,
+ }
+ 
+ func init() {
+@@ -251,9 +254,10 @@ type Config struct {
+ 	ForcePartialCommit bool
+ 
+ 	// Embedded Silkworm support
+-	SilkwormExecution bool
+-	SilkwormRpcDaemon bool
+-	SilkwormSentry    bool
++	SilkwormLibraryPath string
++	SilkwormExecution   bool
++	SilkwormRpcDaemon   bool
++	SilkwormSentry      bool
+ 
+ 	DisableTxPoolGossip bool
+ }
+diff --git a/eth/stagedsync/stage_execute.go b/eth/stagedsync/stage_execute.go
+index 7bf77db28d..de17533bbe 100644
+--- a/eth/stagedsync/stage_execute.go
++++ b/eth/stagedsync/stage_execute.go
+@@ -467,7 +467,7 @@ Loop:
+ 
+ 		_, isMemoryMutation := txc.Tx.(*membatchwithdb.MemoryMutation)
+ 		if cfg.silkworm != nil && !isMemoryMutation {
+-			blockNum, err = silkworm.ExecuteBlocks(cfg.silkworm, txc.Tx, cfg.chainConfig.ChainID, blockNum, to, uint64(cfg.batchSize), writeChangeSets, writeReceipts, writeCallTraces)
++			blockNum, err = cfg.silkworm.ExecuteBlocks(txc.Tx, cfg.chainConfig.ChainID, blockNum, to, uint64(cfg.batchSize), writeChangeSets, writeReceipts, writeCallTraces)
+ 		} else {
+ 			err = executeBlock(block, txc.Tx, batch, cfg, *cfg.vmConfig, writeChangeSets, writeReceipts, writeCallTraces, stateStream, logger)
+ 		}
+diff --git a/go.mod b/go.mod
+index 4aaa184849..2a382dd211 100644
+--- a/go.mod
++++ b/go.mod
+@@ -4,7 +4,6 @@ go 1.20
+ 
+ require (
+ 	github.com/erigontech/mdbx-go v0.27.21
+-	github.com/erigontech/silkworm-go v0.10.0
+ 	github.com/ledgerwatch/log/v3 v3.9.0
+ 	github.com/ledgerwatch/secp256k1 v1.0.0
+ )
+diff --git a/go.sum b/go.sum
+index 5484d069ca..830f60babe 100644
+--- a/go.sum
++++ b/go.sum
+@@ -297,8 +297,6 @@ github.com/envoyproxy/go-control-plane v0.9.9-0.20201210154907-fd9021fe5dad/go.m
+ github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
+ github.com/erigontech/mdbx-go v0.27.21 h1:Pv47QIiRXR8Nv+nltZteLm4xkRwuvqmOCjzZj9X0s1A=
+ github.com/erigontech/mdbx-go v0.27.21/go.mod h1:FAMxbOgqOnRDx51j8HjuJZIgznbDwjX7LItd+/UWyA4=
+-github.com/erigontech/silkworm-go v0.10.0 h1:oAoptLtJbQXk63mrKYs6qliQlbDrXTSNiZfzv1OMp+Q=
+-github.com/erigontech/silkworm-go v0.10.0/go.mod h1:O50ux0apICEVEGyRWiE488K8qz8lc3PA/SXbQQAc8SU=
+ github.com/fjl/gencodec v0.0.0-20220412091415-8bb9e558978c h1:CndMRAH4JIwxbW8KYq6Q+cGWcGHz0FjGR3QqcInWcW0=
+ github.com/fjl/gencodec v0.0.0-20220412091415-8bb9e558978c/go.mod h1:AzA8Lj6YtixmJWL+wkKoBGsLWy9gFrAzi4g+5bCKwpY=
+ github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568/go.mod h1:xEzjJPgXI435gkrCt3MPfRiAkVrwSbHsst4LCFVfpJc=
+diff --git a/turbo/cli/default_flags.go b/turbo/cli/default_flags.go
+index 45a39a2a96..98c2d83596 100644
+--- a/turbo/cli/default_flags.go
++++ b/turbo/cli/default_flags.go
+@@ -163,6 +163,7 @@ var DefaultFlags = []cli.Flag{
+ 
+ 	&utils.OtsSearchMaxCapFlag,
+ 
++	&utils.SilkwormLibraryPathFlag,
+ 	&utils.SilkwormExecutionFlag,
+ 	&utils.SilkwormRpcDaemonFlag,
+ 	&utils.SilkwormSentryFlag,
+diff --git a/turbo/silkworm/load_unix.go b/turbo/silkworm/load_unix.go
+new file mode 100644
+index 0000000000..11a22c7482
+--- /dev/null
++++ b/turbo/silkworm/load_unix.go
+@@ -0,0 +1,37 @@
++//go:build unix
++
++package silkworm
++
++/*
++#cgo LDFLAGS: -ldl
++#include <dlfcn.h>
++#include <stdlib.h>
++*/
++import "C"
++
++import (
++	"fmt"
++	"unsafe"
++)
++
++func OpenLibrary(dllPath string) (unsafe.Pointer, error) {
++	cPath := C.CString(dllPath)
++	defer C.free(unsafe.Pointer(cPath))
++	dllHandle := C.dlopen(cPath, C.RTLD_LAZY)
++	if dllHandle == nil {
++		err := C.GoString(C.dlerror())
++		return nil, fmt.Errorf("failed to load dynamic library %s: %s", dllPath, err)
++	}
++	return dllHandle, nil
++}
++
++func LoadFunction(dllHandle unsafe.Pointer, funcName string) (unsafe.Pointer, error) {
++	cName := C.CString(funcName)
++	defer C.free(unsafe.Pointer(cName))
++	funcPtr := C.dlsym(dllHandle, cName)
++	if funcPtr == nil {
++		err := C.GoString(C.dlerror())
++		return nil, fmt.Errorf("failed to find the %s function: %s", funcName, err)
++	}
++	return funcPtr, nil
++}
+diff --git a/turbo/silkworm/load_windows.go b/turbo/silkworm/load_windows.go
+new file mode 100644
+index 0000000000..537411083c
+--- /dev/null
++++ b/turbo/silkworm/load_windows.go
+@@ -0,0 +1,16 @@
++//go:build windows
++
++package silkworm
++
++import (
++	"errors"
++	"unsafe"
++)
++
++func OpenLibrary(dllPath string) (unsafe.Pointer, error) {
++	return nil, errors.New("not implemented")
++}
++
++func LoadFunction(dllHandle unsafe.Pointer, funcName string) (unsafe.Pointer, error) {
++	return nil, errors.New("not implemented")
++}
+diff --git a/turbo/silkworm/silkworm.go b/turbo/silkworm/silkworm.go
+index 8f8ea42731..df4e775f0f 100644
+--- a/turbo/silkworm/silkworm.go
++++ b/turbo/silkworm/silkworm.go
+@@ -1,35 +1,236 @@
+ package silkworm
+ 
++/*
++
++#include <stdlib.h>
++#include <string.h>
++#include "silkworm_api_bridge.h"
++
++static bool go_string_copy(_GoString_ s, char *dest, size_t size) {
++	size_t len = _GoStringLen(s);
++	if (len >= size) return false;
++	const char *src = _GoStringPtr(s);
++	strncpy(dest, src, len);
++	dest[len] = '\0';
++	return true;
++}
++
++*/
++import "C"
++
+ import (
+ 	"errors"
++	"fmt"
+ 	"math/big"
+-
+-	"github.com/erigontech/silkworm-go"
++	"runtime"
++	"unsafe"
+ 	"github.com/ledgerwatch/erigon-lib/kv"
+ 	"github.com/ledgerwatch/erigon/consensus"
+ )
+ 
+-type Silkworm = silkworm_go.Silkworm
+-type SentrySettings = silkworm_go.SentrySettings
+-type MappedHeaderSnapshot = silkworm_go.MappedHeaderSnapshot
+-type MappedBodySnapshot = silkworm_go.MappedBodySnapshot
+-type MappedTxnSnapshot = silkworm_go.MappedTxnSnapshot
+-type MappedChainSnapshot = silkworm_go.MappedChainSnapshot
++const (
++	SILKWORM_OK                      = C.SILKWORM_OK
++	SILKWORM_INTERNAL_ERROR          = C.SILKWORM_INTERNAL_ERROR
++	SILKWORM_UNKNOWN_ERROR           = C.SILKWORM_UNKNOWN_ERROR
++	SILKWORM_INVALID_HANDLE          = C.SILKWORM_INVALID_HANDLE
++	SILKWORM_INVALID_PATH            = C.SILKWORM_INVALID_PATH
++	SILKWORM_INVALID_SNAPSHOT        = C.SILKWORM_INVALID_SNAPSHOT
++	SILKWORM_INVALID_MDBX_TXN        = C.SILKWORM_INVALID_MDBX_TXN
++	SILKWORM_INVALID_BLOCK_RANGE     = C.SILKWORM_INVALID_BLOCK_RANGE
++	SILKWORM_BLOCK_NOT_FOUND         = C.SILKWORM_BLOCK_NOT_FOUND
++	SILKWORM_UNKNOWN_CHAIN_ID        = C.SILKWORM_UNKNOWN_CHAIN_ID
++	SILKWORM_MDBX_ERROR              = C.SILKWORM_MDBX_ERROR
++	SILKWORM_INVALID_BLOCK           = C.SILKWORM_INVALID_BLOCK
++	SILKWORM_DECODING_ERROR          = C.SILKWORM_DECODING_ERROR
++	SILKWORM_TOO_MANY_INSTANCES      = C.SILKWORM_TOO_MANY_INSTANCES
++	SILKWORM_INVALID_SETTINGS        = C.SILKWORM_INVALID_SETTINGS
++	SILKWORM_TERMINATION_SIGNAL      = C.SILKWORM_TERMINATION_SIGNAL
++	SILKWORM_SERVICE_ALREADY_STARTED = C.SILKWORM_SERVICE_ALREADY_STARTED
++)
+ 
+-var New = silkworm_go.New
+-var NewMemoryMappedRegion = silkworm_go.NewMemoryMappedRegion
+-var NewMappedHeaderSnapshot = silkworm_go.NewMappedHeaderSnapshot
+-var NewMappedBodySnapshot = silkworm_go.NewMappedBodySnapshot
+-var NewMappedTxnSnapshot = silkworm_go.NewMappedTxnSnapshot
++// ErrInterrupted is the error returned by Silkworm APIs when stopped by any termination signal.
++var ErrInterrupted = errors.New("interrupted")
+ 
+-var ErrInterrupted = silkworm_go.ErrInterrupted
++type Silkworm struct {
++	dllHandle      unsafe.Pointer
++	handle         C.SilkwormHandle
++	initFunc       unsafe.Pointer
++	finiFunc       unsafe.Pointer
++	addSnapshot    unsafe.Pointer
++	startRpcDaemon unsafe.Pointer
++	stopRpcDaemon  unsafe.Pointer
++	sentryStart    unsafe.Pointer
++	sentryStop     unsafe.Pointer
++	executeBlocks  unsafe.Pointer
++}
++
++func New(libraryPath string, dataDirPath string) (*Silkworm, error) {
++	dllHandle, err := OpenLibrary(libraryPath)
++	if err != nil {
++		return nil, fmt.Errorf("failed to load silkworm library from path %s: %w", libraryPath, err)
++	}
++
++	initFunc, err := LoadFunction(dllHandle, "silkworm_init")
++	if err != nil {
++		return nil, fmt.Errorf("failed to load silkworm function silkworm_init: %w", err)
++	}
++	finiFunc, err := LoadFunction(dllHandle, "silkworm_fini")
++	if err != nil {
++		return nil, fmt.Errorf("failed to load silkworm function silkworm_fini: %w", err)
++	}
++	addSnapshot, err := LoadFunction(dllHandle, "silkworm_add_snapshot")
++	if err != nil {
++		return nil, fmt.Errorf("failed to load silkworm function silkworm_add_snapshot: %w", err)
++	}
++	startRpcDaemon, err := LoadFunction(dllHandle, "silkworm_start_rpcdaemon")
++	if err != nil {
++		return nil, fmt.Errorf("failed to load silkworm function silkworm_start_rpcdaemon: %w", err)
++	}
++	stopRpcDaemon, err := LoadFunction(dllHandle, "silkworm_stop_rpcdaemon")
++	if err != nil {
++		return nil, fmt.Errorf("failed to load silkworm function silkworm_stop_rpcdaemon: %w", err)
++	}
++	sentryStart, err := LoadFunction(dllHandle, "silkworm_sentry_start")
++	if err != nil {
++		return nil, fmt.Errorf("failed to load silkworm function silkworm_sentry_start: %w", err)
++	}
++	sentryStop, err := LoadFunction(dllHandle, "silkworm_sentry_stop")
++	if err != nil {
++		return nil, fmt.Errorf("failed to load silkworm function silkworm_sentry_stop: %w", err)
++	}
++	executeBlocks, err := LoadFunction(dllHandle, "silkworm_execute_blocks")
++	if err != nil {
++		return nil, fmt.Errorf("failed to load silkworm function silkworm_execute_blocks: %w", err)
++	}
++
++	silkworm := &Silkworm{
++		dllHandle:      dllHandle,
++		handle:         nil,
++		initFunc:       initFunc,
++		finiFunc:       finiFunc,
++		addSnapshot:    addSnapshot,
++		startRpcDaemon: startRpcDaemon,
++		stopRpcDaemon:  stopRpcDaemon,
++		sentryStart:    sentryStart,
++		sentryStop:     sentryStop,
++		executeBlocks:  executeBlocks,
++	}
++
++	settings := &C.struct_SilkwormSettings{}
++
++	if !C.go_string_copy(dataDirPath, &settings.data_dir_path[0], C.SILKWORM_PATH_SIZE) {
++		return nil, errors.New("silkworm.New failed to copy dataDirPath")
++	}
++
++	status := C.call_silkworm_init_func(silkworm.initFunc, &silkworm.handle, settings) //nolint:gocritic
++	if status == SILKWORM_OK {
++		return silkworm, nil
++	}
++	return nil, fmt.Errorf("silkworm_init error %d", status)
++}
++
++func (s *Silkworm) Close() {
++	C.call_silkworm_fini_func(s.finiFunc, s.handle)
++	s.handle = nil
++}
++
++func (s *Silkworm) AddSnapshot(snapshot *MappedChainSnapshot) error {
++	cHeadersSegmentFilePath := C.CString(snapshot.Headers.Segment.FilePath)
++	defer C.free(unsafe.Pointer(cHeadersSegmentFilePath))
++	cHeadersIdxHeaderHashFilePath := C.CString(snapshot.Headers.IdxHeaderHash.FilePath)
++	defer C.free(unsafe.Pointer(cHeadersIdxHeaderHashFilePath))
++	cHeadersSnapshot := C.struct_SilkwormHeadersSnapshot{
++		segment: C.struct_SilkwormMemoryMappedFile{
++			file_path:      cHeadersSegmentFilePath,
++			memory_address: (*C.uchar)(snapshot.Headers.Segment.DataHandle),
++			memory_length:  C.uint64_t(snapshot.Headers.Segment.Size),
++		},
++		header_hash_index: C.struct_SilkwormMemoryMappedFile{
++			file_path:      cHeadersIdxHeaderHashFilePath,
++			memory_address: (*C.uchar)(snapshot.Headers.IdxHeaderHash.DataHandle),
++			memory_length:  C.uint64_t(snapshot.Headers.IdxHeaderHash.Size),
++		},
++	}
++
++	cBodiesSegmentFilePath := C.CString(snapshot.Bodies.Segment.FilePath)
++	defer C.free(unsafe.Pointer(cBodiesSegmentFilePath))
++	cBodiesIdxBodyNumberFilePath := C.CString(snapshot.Bodies.IdxBodyNumber.FilePath)
++	defer C.free(unsafe.Pointer(cBodiesIdxBodyNumberFilePath))
++	cBodiesSnapshot := C.struct_SilkwormBodiesSnapshot{
++		segment: C.struct_SilkwormMemoryMappedFile{
++			file_path:      cBodiesSegmentFilePath,
++			memory_address: (*C.uchar)(snapshot.Bodies.Segment.DataHandle),
++			memory_length:  C.uint64_t(snapshot.Bodies.Segment.Size),
++		},
++		block_num_index: C.struct_SilkwormMemoryMappedFile{
++			file_path:      cBodiesIdxBodyNumberFilePath,
++			memory_address: (*C.uchar)(snapshot.Bodies.IdxBodyNumber.DataHandle),
++			memory_length:  C.uint64_t(snapshot.Bodies.IdxBodyNumber.Size),
++		},
++	}
++
++	cTxsSegmentFilePath := C.CString(snapshot.Txs.Segment.FilePath)
++	defer C.free(unsafe.Pointer(cTxsSegmentFilePath))
++	cTxsIdxTxnHashFilePath := C.CString(snapshot.Txs.IdxTxnHash.FilePath)
++	defer C.free(unsafe.Pointer(cTxsIdxTxnHashFilePath))
++	cTxsIdxTxnHash2BlockFilePath := C.CString(snapshot.Txs.IdxTxnHash2BlockNum.FilePath)
++	defer C.free(unsafe.Pointer(cTxsIdxTxnHash2BlockFilePath))
++	cTxsSnapshot := C.struct_SilkwormTransactionsSnapshot{
++		segment: C.struct_SilkwormMemoryMappedFile{
++			file_path:      cTxsSegmentFilePath,
++			memory_address: (*C.uchar)(snapshot.Txs.Segment.DataHandle),
++			memory_length:  C.uint64_t(snapshot.Txs.Segment.Size),
++		},
++		tx_hash_index: C.struct_SilkwormMemoryMappedFile{
++			file_path:      cTxsIdxTxnHashFilePath,
++			memory_address: (*C.uchar)(snapshot.Txs.IdxTxnHash.DataHandle),
++			memory_length:  C.uint64_t(snapshot.Txs.IdxTxnHash.Size),
++		},
++		tx_hash_2_block_index: C.struct_SilkwormMemoryMappedFile{
++			file_path:      cTxsIdxTxnHash2BlockFilePath,
++			memory_address: (*C.uchar)(snapshot.Txs.IdxTxnHash2BlockNum.DataHandle),
++			memory_length:  C.uint64_t(snapshot.Txs.IdxTxnHash2BlockNum.Size),
++		},
++	}
++
++	cChainSnapshot := C.struct_SilkwormChainSnapshot{
++		headers:      cHeadersSnapshot,
++		bodies:       cBodiesSnapshot,
++		transactions: cTxsSnapshot,
++	}
++
++	status := C.call_silkworm_add_snapshot_func(s.addSnapshot, s.handle, &cChainSnapshot) //nolint:gocritic
++	if status == SILKWORM_OK {
++		return nil
++	}
++	return fmt.Errorf("silkworm_add_snapshot error %d", status)
++}
++
++func (s *Silkworm) StartRpcDaemon(db kv.RoDB) error {
++	cEnv := (*C.MDBX_env)(db.CHandle())
++	status := C.call_silkworm_start_rpcdaemon_func(s.startRpcDaemon, s.handle, cEnv)
++	// Handle successful execution
++	if status == SILKWORM_OK {
++		return nil
++	}
++	return fmt.Errorf("silkworm_start_rpcdaemon error %d", status)
++}
++
++func (s *Silkworm) StopRpcDaemon() error {
++	status := C.call_silkworm_stop_rpcdaemon_func(s.stopRpcDaemon, s.handle)
++	// Handle successful execution
++	if status == SILKWORM_OK {
++		return nil
++	}
++	return fmt.Errorf("silkworm_stop_rpcdaemon error %d", status)
++}
+ 
+ type RpcDaemonService struct {
+ 	silkworm *Silkworm
+ 	db       kv.RoDB
+ }
+ 
+-func NewRpcDaemonService(s *Silkworm, db kv.RoDB) RpcDaemonService {
++func (s *Silkworm) NewRpcDaemonService(db kv.RoDB) RpcDaemonService {
+ 	return RpcDaemonService{
+ 		silkworm: s,
+ 		db:       db,
+@@ -37,19 +238,97 @@ func NewRpcDaemonService(s *Silkworm, db kv.RoDB) RpcDaemonService {
+ }
+ 
+ func (service RpcDaemonService) Start() error {
+-	return service.silkworm.StartRpcDaemon(service.db.CHandle())
++	return service.silkworm.StartRpcDaemon(service.db)
+ }
+ 
+ func (service RpcDaemonService) Stop() error {
+ 	return service.silkworm.StopRpcDaemon()
+ }
+ 
++type SentrySettings struct {
++	ClientId    string
++	ApiPort     int
++	Port        int
++	Nat         string
++	NetworkId   uint64
++	NodeKey     []byte
++	StaticPeers []string
++	Bootnodes   []string
++	NoDiscover  bool
++	MaxPeers    int
++}
++
++func copyPeerURLs(list []string, cList *[C.SILKWORM_SENTRY_SETTINGS_PEERS_MAX][C.SILKWORM_SENTRY_SETTINGS_PEER_URL_SIZE]C.char) error {
++	listLen := len(list)
++	if listLen > C.SILKWORM_SENTRY_SETTINGS_PEERS_MAX {
++		return errors.New("copyPeerURLs: peers URL list has too many items")
++	}
++	// mark the list end with an empty string
++	if listLen < C.SILKWORM_SENTRY_SETTINGS_PEERS_MAX {
++		cList[listLen][0] = 0
++	}
++	for i, url := range list {
++		if !C.go_string_copy(url, &cList[i][0], C.SILKWORM_SENTRY_SETTINGS_PEER_URL_SIZE) {
++			return fmt.Errorf("copyPeerURLs: failed to copy peer URL %d", i)
++		}
++	}
++	return nil
++}
++
++func makeCSentrySettings(settings SentrySettings) (*C.struct_SilkwormSentrySettings, error) {
++	cSettings := &C.struct_SilkwormSentrySettings{
++		api_port:    C.uint16_t(settings.ApiPort),
++		port:        C.uint16_t(settings.Port),
++		network_id:  C.uint64_t(settings.NetworkId),
++		no_discover: C.bool(settings.NoDiscover),
++		max_peers:   C.size_t(settings.MaxPeers),
++	}
++	if !C.go_string_copy(settings.ClientId, &cSettings.client_id[0], C.SILKWORM_SENTRY_SETTINGS_CLIENT_ID_SIZE) {
++		return nil, errors.New("makeCSentrySettings failed to copy ClientId")
++	}
++	if !C.go_string_copy(settings.Nat, &cSettings.nat[0], C.SILKWORM_SENTRY_SETTINGS_NAT_SIZE) {
++		return nil, errors.New("makeCSentrySettings failed to copy Nat")
++	}
++	if len(settings.NodeKey) == C.SILKWORM_SENTRY_SETTINGS_NODE_KEY_SIZE {
++		C.memcpy(unsafe.Pointer(&cSettings.node_key[0]), unsafe.Pointer(&settings.NodeKey[0]), C.SILKWORM_SENTRY_SETTINGS_NODE_KEY_SIZE) //nolint:gocritic
++	} else {
++		return nil, errors.New("makeCSentrySettings failed to copy NodeKey")
++	}
++	if err := copyPeerURLs(settings.StaticPeers, &cSettings.static_peers); err != nil {
++		return nil, fmt.Errorf("copyPeerURLs failed to copy StaticPeers: %w", err)
++	}
++	if err := copyPeerURLs(settings.Bootnodes, &cSettings.bootnodes); err != nil {
++		return nil, fmt.Errorf("copyPeerURLs failed to copy Bootnodes: %w", err)
++	}
++	return cSettings, nil
++}
++
++func (s *Silkworm) SentryStart(settings SentrySettings) error {
++	cSettings, err := makeCSentrySettings(settings)
++	if err != nil {
++		return err
++	}
++	status := C.call_silkworm_sentry_start_func(s.sentryStart, s.handle, cSettings)
++	if status == SILKWORM_OK {
++		return nil
++	}
++	return fmt.Errorf("silkworm_sentry_start error %d", status)
++}
++
++func (s *Silkworm) SentryStop() error {
++	status := C.call_silkworm_stop_rpcdaemon_func(s.sentryStop, s.handle)
++	if status == SILKWORM_OK {
++		return nil
++	}
++	return fmt.Errorf("silkworm_sentry_stop error %d", status)
++}
++
+ type SentryService struct {
+-	silkworm *silkworm_go.Silkworm
+-	settings silkworm_go.SentrySettings
++	silkworm *Silkworm
++	settings SentrySettings
+ }
+ 
+-func NewSentryService(s *Silkworm, settings silkworm_go.SentrySettings) SentryService {
++func (s *Silkworm) NewSentryService(settings SentrySettings) SentryService {
+ 	return SentryService{
+ 		silkworm: s,
+ 		settings: settings,
+@@ -64,12 +343,36 @@ func (service SentryService) Stop() error {
+ 	return service.silkworm.SentryStop()
+ }
+ 
+-func ExecuteBlocks(s *Silkworm, txn kv.Tx, chainID *big.Int, startBlock uint64, maxBlock uint64, batchSize uint64, writeChangeSets, writeReceipts, writeCallTraces bool) (uint64, error) {
+-	lastExecutedBlock, err := s.ExecuteBlocks(txn.CHandle(), chainID, startBlock, maxBlock, batchSize, writeChangeSets, writeReceipts, writeCallTraces)
+-	if (err != nil) && errors.Is(err, silkworm_go.ErrInvalidBlock) {
++func (s *Silkworm) ExecuteBlocks(txn kv.Tx, chainID *big.Int, startBlock uint64, maxBlock uint64, batchSize uint64, writeChangeSets, writeReceipts, writeCallTraces bool) (lastExecutedBlock uint64, err error) {
++	if runtime.GOOS == "darwin" {
++		return 0, errors.New("silkworm execution is incompatible with Go runtime on macOS due to stack size mismatch (see https://github.com/golang/go/issues/28024)")
++	}
++
++	cTxn := (*C.MDBX_txn)(txn.CHandle())
++	cChainId := C.uint64_t(chainID.Uint64())
++	cStartBlock := C.uint64_t(startBlock)
++	cMaxBlock := C.uint64_t(maxBlock)
++	cBatchSize := C.uint64_t(batchSize)
++	cWriteChangeSets := C._Bool(writeChangeSets)
++	cWriteReceipts := C._Bool(writeReceipts)
++	cWriteCallTraces := C._Bool(writeCallTraces)
++	cLastExecutedBlock := C.uint64_t(startBlock - 1)
++	cMdbxErrorCode := C.int(0)
++	status := C.call_silkworm_execute_blocks_func(s.executeBlocks, s.handle, cTxn, cChainId, cStartBlock,
++		cMaxBlock, cBatchSize, cWriteChangeSets, cWriteReceipts, cWriteCallTraces, &cLastExecutedBlock, &cMdbxErrorCode)
++	lastExecutedBlock = uint64(cLastExecutedBlock)
++	// Handle successful execution
++	if status == SILKWORM_OK {
++		return lastExecutedBlock, nil
++	}
++	// Handle special errors
++	if status == SILKWORM_INVALID_BLOCK {
+ 		return lastExecutedBlock, consensus.ErrInvalidBlock
+ 	}
+-	return lastExecutedBlock, err
++	if status == SILKWORM_TERMINATION_SIGNAL {
++		return lastExecutedBlock, ErrInterrupted
++	}
++	return lastExecutedBlock, fmt.Errorf("silkworm_execute_blocks error %d, MDBX error %d", status, cMdbxErrorCode)
+ }
+ 
+ type CanAddSnapshotsToSilkwarm interface {
+diff --git a/turbo/silkworm/silkworm_api.h b/turbo/silkworm/silkworm_api.h
+new file mode 100644
+index 0000000000..9d3e655837
+--- /dev/null
++++ b/turbo/silkworm/silkworm_api.h
+@@ -0,0 +1,208 @@
++/*
++   Copyright 2023 The Silkworm Authors
++
++   Licensed under the Apache License, Version 2.0 (the "License");
++   you may not use this file except in compliance with the License.
++   You may obtain a copy of the License at
++
++       http://www.apache.org/licenses/LICENSE-2.0
++
++   Unless required by applicable law or agreed to in writing, software
++   distributed under the License is distributed on an "AS IS" BASIS,
++   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++   See the License for the specific language governing permissions and
++   limitations under the License.
++*/
++
++#ifndef SILKWORM_API_H_
++#define SILKWORM_API_H_
++
++// C API exported by Silkworm to be used in Erigon.
++
++#include <stdbool.h>  // NOLINT(*-deprecated-headers)
++#include <stddef.h>  // NOLINT(*-deprecated-headers)
++#include <stdint.h>  // NOLINT(*-deprecated-headers)
++
++#if defined _MSC_VER
++#define SILKWORM_EXPORT __declspec(dllexport)
++#else
++#define SILKWORM_EXPORT __attribute__((visibility("default")))
++#endif
++
++#if __cplusplus
++#define SILKWORM_NOEXCEPT noexcept
++#else
++#define SILKWORM_NOEXCEPT
++#endif
++
++#if __cplusplus
++extern "C" {
++#endif
++
++// Silkworm library error codes (SILKWORM_OK indicates no error, i.e. success)
++
++#define SILKWORM_OK 0
++#define SILKWORM_INTERNAL_ERROR 1
++#define SILKWORM_UNKNOWN_ERROR 2
++#define SILKWORM_INVALID_HANDLE 3
++#define SILKWORM_INVALID_PATH 4
++#define SILKWORM_INVALID_SNAPSHOT 5
++#define SILKWORM_INVALID_MDBX_TXN 6
++#define SILKWORM_INVALID_BLOCK_RANGE 7
++#define SILKWORM_BLOCK_NOT_FOUND 8
++#define SILKWORM_UNKNOWN_CHAIN_ID 9
++#define SILKWORM_MDBX_ERROR 10
++#define SILKWORM_INVALID_BLOCK 11
++#define SILKWORM_DECODING_ERROR 12
++#define SILKWORM_TOO_MANY_INSTANCES 13
++#define SILKWORM_INVALID_SETTINGS 14
++#define SILKWORM_TERMINATION_SIGNAL 15
++#define SILKWORM_SERVICE_ALREADY_STARTED 16
++
++typedef struct MDBX_env MDBX_env;
++typedef struct MDBX_txn MDBX_txn;
++
++struct SilkwormInstance;
++typedef struct SilkwormInstance* SilkwormHandle;
++
++struct SilkwormMemoryMappedFile {
++    const char* file_path;
++    uint8_t* memory_address;
++    uint64_t memory_length;
++};
++
++struct SilkwormHeadersSnapshot {
++    struct SilkwormMemoryMappedFile segment;
++    struct SilkwormMemoryMappedFile header_hash_index;
++};
++
++struct SilkwormBodiesSnapshot {
++    struct SilkwormMemoryMappedFile segment;
++    struct SilkwormMemoryMappedFile block_num_index;
++};
++
++struct SilkwormTransactionsSnapshot {
++    struct SilkwormMemoryMappedFile segment;
++    struct SilkwormMemoryMappedFile tx_hash_index;
++    struct SilkwormMemoryMappedFile tx_hash_2_block_index;
++};
++
++struct SilkwormChainSnapshot {
++    struct SilkwormHeadersSnapshot headers;
++    struct SilkwormBodiesSnapshot bodies;
++    struct SilkwormTransactionsSnapshot transactions;
++};
++
++#define SILKWORM_PATH_SIZE 260
++
++struct SilkwormSettings {
++    //! Data directory path in UTF-8.
++    char data_dir_path[SILKWORM_PATH_SIZE];
++};
++
++/**
++ * \brief Initialize the Silkworm C API library.
++ * \param[in,out] handle Silkworm instance handle returned on successful initialization.
++ * \param[in] settings General Silkworm settings.
++ * \return SILKWORM_OK (=0) on success, a non-zero error value on failure.
++ */
++SILKWORM_EXPORT int silkworm_init(
++    SilkwormHandle* handle,
++    const struct SilkwormSettings* settings) SILKWORM_NOEXCEPT;
++
++/**
++ * \brief Build a set of indexes for the given snapshots.
++ * \param[in] handle A valid Silkworm instance handle, got with silkworm_init.
++ * \param[in] snapshots An array of snapshots to index.
++ * \param[in] indexPaths An array of paths to write indexes to.
++ * Note that the name of the index is a part of the path and it is used to determine the index type.
++ * \param[in] len The number of snapshots and paths.
++ * \return SILKWORM_OK (=0) on success, a non-zero error value on failure on some or all indexes.
++ */
++SILKWORM_EXPORT int silkworm_build_recsplit_indexes(SilkwormHandle handle, struct SilkwormMemoryMappedFile* snapshots[], int len) SILKWORM_NOEXCEPT;
++
++/**
++ * \brief Notify Silkworm about a new snapshot to use.
++ * \param[in] handle A valid Silkworm instance handle, got with silkworm_init.
++ * \param[in] snapshot A snapshot to use.
++ * \return SILKWORM_OK (=0) on success, a non-zero error value on failure.
++ */
++SILKWORM_EXPORT int silkworm_add_snapshot(SilkwormHandle handle, struct SilkwormChainSnapshot* snapshot) SILKWORM_NOEXCEPT;
++
++/**
++ * \brief Start Silkworm RPC daemon.
++ * \param[in] handle A valid Silkworm instance handle, got with silkworm_init.Must not be zero.
++ * \param[in] env An valid MDBX environment. Must not be zero.
++ * \return SILKWORM_OK (=0) on success, a non-zero error value on failure.
++ */
++SILKWORM_EXPORT int silkworm_start_rpcdaemon(SilkwormHandle handle, MDBX_env* env) SILKWORM_NOEXCEPT;
++
++/**
++ * \brief Stop Silkworm RPC daemon and wait for its termination.
++ * \param[in] handle A valid Silkworm instance handle, got with silkworm_init. Must not be zero.
++ * \param[in] snapshot A snapshot to use.
++ * \return SILKWORM_OK (=0) on success, a non-zero error value on failure.
++ */
++SILKWORM_EXPORT int silkworm_stop_rpcdaemon(SilkwormHandle handle) SILKWORM_NOEXCEPT;
++
++#define SILKWORM_SENTRY_SETTINGS_CLIENT_ID_SIZE 128
++#define SILKWORM_SENTRY_SETTINGS_NAT_SIZE 50
++#define SILKWORM_SENTRY_SETTINGS_NODE_KEY_SIZE 32
++#define SILKWORM_SENTRY_SETTINGS_PEERS_MAX 128
++#define SILKWORM_SENTRY_SETTINGS_PEER_URL_SIZE 200
++
++struct SilkwormSentrySettings {
++    char client_id[SILKWORM_SENTRY_SETTINGS_CLIENT_ID_SIZE];
++    uint16_t api_port;
++    uint16_t port;
++    char nat[SILKWORM_SENTRY_SETTINGS_NAT_SIZE];
++    uint64_t network_id;
++    uint8_t node_key[SILKWORM_SENTRY_SETTINGS_NODE_KEY_SIZE];
++    char static_peers[SILKWORM_SENTRY_SETTINGS_PEERS_MAX][SILKWORM_SENTRY_SETTINGS_PEER_URL_SIZE];
++    char bootnodes[SILKWORM_SENTRY_SETTINGS_PEERS_MAX][SILKWORM_SENTRY_SETTINGS_PEER_URL_SIZE];
++    bool no_discover;
++    size_t max_peers;
++};
++
++SILKWORM_EXPORT int silkworm_sentry_start(SilkwormHandle handle, const struct SilkwormSentrySettings* settings) SILKWORM_NOEXCEPT;
++SILKWORM_EXPORT int silkworm_sentry_stop(SilkwormHandle handle) SILKWORM_NOEXCEPT;
++
++/**
++ * \brief Execute a batch of blocks and write resulting changes into the database.
++ * \param[in] handle A valid Silkworm instance handle, got with silkworm_init.
++ * \param[in] txn A valid read-write MDBX transaction. Must not be zero.
++ * This function does not commit nor abort the transaction.
++ * \param[in] chain_id EIP-155 chain ID. SILKWORM_UNKNOWN_CHAIN_ID is returned in case of an unknown or unsupported chain.
++ * \param[in] start_block The block height to start the execution from.
++ * \param[in] max_block Do not execute after this block.
++ * max_block may be executed, or the execution may stop earlier if the batch is full.
++ * \param[in] batch_size The size of DB changes to accumulate before returning from this method.
++ * Pass 0 if you want to execute just 1 block.
++ * \param[in] write_change_sets Whether to write state changes into the DB.
++ * \param[in] write_receipts Whether to write CBOR-encoded receipts into the DB.
++ * \param[in] write_call_traces Whether to write call traces into the DB.
++ * \param[out] last_executed_block The height of the last successfully executed block.
++ * Not written to if no blocks were executed, otherwise *last_executed_block ≤ max_block.
++ * \param[out] mdbx_error_code If an MDBX error occurs (this function returns kSilkwormMdbxError)
++ * and mdbx_error_code isn't NULL, it's populated with the relevant MDBX error code.
++ * \return SILKWORM_OK (=0) on success, a non-zero error value on failure.
++ * SILKWORM_BLOCK_NOT_FOUND is probably OK: it simply means that the execution reached the end of the chain
++ * (blocks up to and incl. last_executed_block were still executed).
++ */
++SILKWORM_EXPORT int silkworm_execute_blocks(
++    SilkwormHandle handle, MDBX_txn* txn, uint64_t chain_id, uint64_t start_block, uint64_t max_block,
++    uint64_t batch_size, bool write_change_sets, bool write_receipts, bool write_call_traces,
++    uint64_t* last_executed_block, int* mdbx_error_code) SILKWORM_NOEXCEPT;
++
++/**
++ * \brief Finalize the Silkworm C API library.
++ * \param[in] handle A valid Silkworm instance handle got with silkworm_init.
++ * \return SILKWORM_OK (=0) on success, a non-zero error value on failure.
++ */
++SILKWORM_EXPORT int silkworm_fini(SilkwormHandle handle) SILKWORM_NOEXCEPT;
++
++#if __cplusplus
++}
++#endif
++
++#endif  // SILKWORM_API_H_
+diff --git a/turbo/silkworm/silkworm_api_bridge.h b/turbo/silkworm/silkworm_api_bridge.h
+new file mode 100644
+index 0000000000..4cf482f188
+--- /dev/null
++++ b/turbo/silkworm/silkworm_api_bridge.h
+@@ -0,0 +1,75 @@
++/*
++   Copyright 2023 The Silkworm Authors
++
++   Licensed under the Apache License, Version 2.0 (the "License");
++   you may not use this file except in compliance with the License.
++   You may obtain a copy of the License at
++
++       http://www.apache.org/licenses/LICENSE-2.0
++
++   Unless required by applicable law or agreed to in writing, software
++   distributed under the License is distributed on an "AS IS" BASIS,
++   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++   See the License for the specific language governing permissions and
++   limitations under the License.
++*/
++
++#ifndef SILKWORM_API_FUNC_H_
++#define SILKWORM_API_FUNC_H_
++
++#include "silkworm_api.h"
++
++typedef int (*silkworm_init_func)(SilkwormHandle* handle, const struct SilkwormSettings* settings);
++
++int call_silkworm_init_func(void* func_ptr, SilkwormHandle* handle, const struct SilkwormSettings* settings) {
++    return ((silkworm_init_func)func_ptr)(handle, settings);
++}
++
++typedef int (*silkworm_add_snapshot_func)(SilkwormHandle handle, struct SilkwormChainSnapshot* snapshot);
++
++int call_silkworm_add_snapshot_func(void* func_ptr, SilkwormHandle handle, struct SilkwormChainSnapshot* snapshot) {
++    return ((silkworm_add_snapshot_func)func_ptr)(handle, snapshot);
++}
++
++typedef int (*silkworm_start_rpcdaemon_func)(SilkwormHandle handle, MDBX_env* env);
++
++int call_silkworm_start_rpcdaemon_func(void* func_ptr, SilkwormHandle handle, MDBX_env* env) {
++    return ((silkworm_start_rpcdaemon_func)func_ptr)(handle, env);
++}
++
++typedef int (*silkworm_stop_rpcdaemon_func)(SilkwormHandle handle);
++
++int call_silkworm_stop_rpcdaemon_func(void* func_ptr, SilkwormHandle handle) {
++    return ((silkworm_stop_rpcdaemon_func)func_ptr)(handle);
++}
++
++typedef int (*silkworm_sentry_start_func)(SilkwormHandle handle, const struct SilkwormSentrySettings* settings);
++
++int call_silkworm_sentry_start_func(void* func_ptr, SilkwormHandle handle, const struct SilkwormSentrySettings* settings) {
++	return ((silkworm_sentry_start_func)func_ptr)(handle, settings);
++}
++
++typedef int (*silkworm_sentry_stop_func)(SilkwormHandle handle);
++
++int call_silkworm_sentry_stop_func(void* func_ptr, SilkwormHandle handle) {
++	return ((silkworm_sentry_stop_func)func_ptr)(handle);
++}
++
++typedef int (*silkworm_execute_blocks_func)(SilkwormHandle handle, MDBX_txn* txn, uint64_t chain_id, uint64_t start_block,
++    uint64_t max_block, uint64_t batch_size, bool write_change_sets, bool write_receipts, bool write_call_traces,
++	uint64_t* last_executed_block, int* mdbx_error_code);
++
++int call_silkworm_execute_blocks_func(void* func_ptr, SilkwormHandle handle, MDBX_txn* txn, uint64_t chain_id, uint64_t start_block,
++	uint64_t max_block, uint64_t batch_size, bool write_change_sets, bool write_receipts, bool write_call_traces,
++	uint64_t* last_executed_block, int* mdbx_error_code) {
++    return ((silkworm_execute_blocks_func)func_ptr)(handle, txn, chain_id, start_block, max_block, batch_size, write_change_sets,
++		write_receipts, write_call_traces, last_executed_block, mdbx_error_code);
++}
++
++typedef int (*silkworm_fini_func)(SilkwormHandle handle);
++
++int call_silkworm_fini_func(void* func_ptr, SilkwormHandle handle) {
++    return ((silkworm_fini_func)func_ptr)(handle);
++}
++
++#endif  // SILKWORM_API_FUNC_H_
+diff --git a/turbo/silkworm/silkworm_go_devenv.sh b/turbo/silkworm/silkworm_go_devenv.sh
+deleted file mode 100755
+index 79ebb808a6..0000000000
+--- a/turbo/silkworm/silkworm_go_devenv.sh
++++ /dev/null
+@@ -1,49 +0,0 @@
+-#!/bin/bash
+-
+-set -e
+-set -o pipefail
+-
+-TARGET="silkworm_capi"
+-script_dir=$(dirname "${BASH_SOURCE[0]}")
+-project_dir=$(realpath "$script_dir/../..")
+-
+-src_dir="$1"
+-build_dir="$2"
+-
+-if [[ ! -d "$src_dir" ]]
+-then
+-    echo "source directory '$src_dir' not found"
+-    exit 1
+-fi
+-
+-if [[ -z "$build_dir" ]]
+-then
+-    build_dir="$src_dir/build"
+-fi
+-
+-if [[ ! -d "$build_dir" ]]
+-then
+-    echo "build directory '$build_dir' not found"
+-    exit 1
+-fi
+-
+-replace_dir=$(mktemp -d -t silkworm-go 2> /dev/null || mktemp -d -t silkworm-go.XXXXXXXX)
+-
+-git clone --depth 1 "https://github.com/erigontech/silkworm-go" "$replace_dir"
+-
+-ln -s "$src_dir/silkworm/capi/silkworm.h" "$replace_dir/include/"
+-
+-product_dir="$build_dir/silkworm/capi"
+-product_path=$(echo "$product_dir/"*$TARGET*)
+-product_file_name=$(basename "$product_path")
+-
+-for platform in macos_arm64 macos_x64 linux_arm64 linux_x64
+-do
+-    mkdir "$replace_dir/lib/$platform"
+-    ln -s "$product_path" "$replace_dir/lib/$platform/$product_file_name"
+-done
+-
+-cd "$project_dir/.."
+-rm -f "go.work"
+-go work init "$project_dir"
+-go work use "$replace_dir"
+diff --git a/turbo/silkworm/silkworm_lib_path.sh b/turbo/silkworm/silkworm_lib_path.sh
+deleted file mode 100755
+index 00d30b2ad2..0000000000
+--- a/turbo/silkworm/silkworm_lib_path.sh
++++ /dev/null
+@@ -1,60 +0,0 @@
+-#!/bin/bash
+-
+-set -e
+-set -u
+-set -o pipefail
+-
+-script_dir=$(dirname "${BASH_SOURCE[0]}")
+-project_dir=$(realpath "$script_dir/../..")
+-go_cmd=go
+-
+-function os_name {
+-	value=$(uname -s)
+-	case $value in
+-		Linux)
+-			echo linux;;
+-		Darwin)
+-			echo macos;;
+-		*)
+-			echo "unsupported OS: $value"
+-			exit 1;;
+-	esac
+-}
+-
+-function arch_name {
+-	value=$(uname -m)
+-	case $value in
+-		arm64)
+-			echo arm64;;
+-		aarch64)
+-			echo arm64;;
+-		x86_64)
+-			echo x64;;
+-		*)
+-			echo "unsupported CPU architecture: $value"
+-			exit 1;;
+-	esac
+-}
+-
+-function lib_file_ext {
+-    value=$(os_name)
+-    case $value in
+-        linux)
+-            echo so;;
+-        macos)
+-            echo dylib;;
+-		*)
+-			echo "unsupported OS: $value"
+-			exit 1;;
+-    esac
+-}
+-
+-function silkworm_go_version {
+-    grep "silkworm-go" "$project_dir/go.mod" | awk '{ print $2 }'
+-}
+-
+-function libsilkworm_path {
+-    echo "$($go_cmd env GOMODCACHE)/github.com/erigontech/silkworm-go@$(silkworm_go_version)/lib/$(os_name)_$(arch_name)/libsilkworm_capi.$(lib_file_ext)"
+-}
+-
+-libsilkworm_path
+diff --git a/turbo/silkworm/snapshot_types.go b/turbo/silkworm/snapshot_types.go
+new file mode 100644
+index 0000000000..0dea939761
+--- /dev/null
++++ b/turbo/silkworm/snapshot_types.go
+@@ -0,0 +1,65 @@
++package silkworm
++
++import "unsafe"
++
++type MemoryMappedRegion struct {
++	FilePath   string
++	DataHandle unsafe.Pointer
++	Size       int64
++}
++
++type MappedHeaderSnapshot struct {
++	Segment       *MemoryMappedRegion
++	IdxHeaderHash *MemoryMappedRegion
++}
++
++type MappedBodySnapshot struct {
++	Segment       *MemoryMappedRegion
++	IdxBodyNumber *MemoryMappedRegion
++}
++
++type MappedTxnSnapshot struct {
++	Segment             *MemoryMappedRegion
++	IdxTxnHash          *MemoryMappedRegion
++	IdxTxnHash2BlockNum *MemoryMappedRegion
++}
++
++type MappedChainSnapshot struct {
++	Headers *MappedHeaderSnapshot
++	Bodies  *MappedBodySnapshot
++	Txs     *MappedTxnSnapshot
++}
++
++func NewMemoryMappedRegion(filePath string, dataHandle unsafe.Pointer, size int64) *MemoryMappedRegion {
++	region := &MemoryMappedRegion{
++		FilePath:   filePath,
++		DataHandle: dataHandle,
++		Size:       size,
++	}
++	return region
++}
++
++func NewMappedHeaderSnapshot(segment, idxHeaderHash *MemoryMappedRegion) *MappedHeaderSnapshot {
++	snapshot := &MappedHeaderSnapshot{
++		Segment:       segment,
++		IdxHeaderHash: idxHeaderHash,
++	}
++	return snapshot
++}
++
++func NewMappedBodySnapshot(segment, idxBodyNumber *MemoryMappedRegion) *MappedBodySnapshot {
++	snapshot := &MappedBodySnapshot{
++		Segment:       segment,
++		IdxBodyNumber: idxBodyNumber,
++	}
++	return snapshot
++}
++
++func NewMappedTxnSnapshot(segment, idxTxnHash, idxTxnHash2BlockNum *MemoryMappedRegion) *MappedTxnSnapshot {
++	snapshot := &MappedTxnSnapshot{
++		Segment:             segment,
++		IdxTxnHash:          idxTxnHash,
++		IdxTxnHash2BlockNum: idxTxnHash2BlockNum,
++	}
++	return snapshot
++}
