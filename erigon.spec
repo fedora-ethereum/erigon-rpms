@@ -43,7 +43,8 @@ export GIT_BRANCH="%{name}-v%{version}"
 export GIT_TAG="v%{version}"
 # Begin building:
 echo "------------ Building Erigon $GIT_TAG from branch $GIT_BRANCH (commit $GIT_COMMIT) ------------"
-make %{name} downloader hack integration observer rpcdaemon rpctest sentry state txpool
+#make %{name} downloader hack integration observer rpcdaemon rpctest sentry state txpool
+make
 echo '# "%{name}" 1 "%{summary}" %{vendor} "User Manuals"' > %{name}.1.md
 cat %{name}.1.md README.md | go-md2man > %{name}.1
 #%%{__gzip} %%{name}.1
