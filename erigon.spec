@@ -2,10 +2,10 @@
 %global debug_package %{nil}
 # TODO: rig up debug package support with golang.
 
-%global git_commit 4f6eda7694b4f33d2f907b40088e3a83192b5c2c
+%global git_commit 9f1cd651f0b1b443b4bd96eaed84502c149fdca2
 
 Name:           erigon
-Version:        2.57.0
+Version:        2.57.1
 Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPLv3

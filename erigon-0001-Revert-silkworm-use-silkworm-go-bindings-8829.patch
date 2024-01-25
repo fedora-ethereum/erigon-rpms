@@ -1,3 +1,4 @@
+From 009142dfee774b82c6cf36378fed8c35defec6e3 Mon Sep 17 00:00:00 2001
 From: Peter Lemenkov <lemenkov@gmail.com>
 Date: Sat, 6 Jan 2024 14:38:48 +0100
 Subject: [PATCH] Revert "silkworm: use silkworm-go bindings (#8829)"
@@ -111,10 +112,10 @@ index 23bb4fa55c..2c5ff7e261 100644
  	cfg.SilkwormSentry = ctx.Bool(SilkwormSentryFlag.Name)
  }
 diff --git a/eth/backend.go b/eth/backend.go
-index 9d24aabaf2..d309553f06 100644
+index 38e52211e6..efc4227056 100644
 --- a/eth/backend.go
 +++ b/eth/backend.go
-@@ -346,8 +346,8 @@ func New(ctx context.Context, stack *node.Node, config *ethconfig.Config, logger
+@@ -350,8 +350,8 @@ func New(ctx context.Context, stack *node.Node, config *ethconfig.Config, logger
  
  	backend.gasPrice, _ = uint256.FromBig(config.Miner.GasPrice)
  
@@ -125,7 +126,7 @@ index 9d24aabaf2..d309553f06 100644
  		if err != nil {
  			return nil, err
  		}
-@@ -388,7 +388,7 @@ func New(ctx context.Context, stack *node.Node, config *ethconfig.Config, logger
+@@ -392,7 +392,7 @@ func New(ctx context.Context, stack *node.Node, config *ethconfig.Config, logger
  			MaxPeers:    p2pConfig.MaxPeers,
  		}
  
@@ -134,7 +135,7 @@ index 9d24aabaf2..d309553f06 100644
  		backend.silkwormSentryService = &silkwormSentryService
  
  		sentryClient, err := sentry_multi_client.GrpcClient(backend.sentryCtx, apiAddr)
-@@ -918,7 +918,7 @@ func (s *Ethereum) Init(stack *node.Node, config *ethconfig.Config) error {
+@@ -922,7 +922,7 @@ func (s *Ethereum) Init(stack *node.Node, config *ethconfig.Config) error {
  	s.apiList = jsonrpc.APIList(chainKv, ethRpcClient, txPoolRpcClient, miningRpcClient, ff, stateCache, blockReader, s.agg, &httpRpcCfg, s.engine, s.logger)
  
  	if config.SilkwormRpcDaemon && httpRpcCfg.Enabled {
@@ -143,7 +144,7 @@ index 9d24aabaf2..d309553f06 100644
  		s.silkwormRPCDaemonService = &silkwormRPCDaemonService
  	} else {
  		go func() {
-@@ -1459,9 +1459,7 @@ func (s *Ethereum) Stop() error {
+@@ -1463,9 +1463,7 @@ func (s *Ethereum) Stop() error {
  		}
  	}
  	if s.silkworm != nil {
