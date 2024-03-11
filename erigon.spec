@@ -14,8 +14,10 @@ URL:            https://github.com/ledgerwatch/erigon
 # File sources:
 Source0:        https://github.com/ledgerwatch/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
+Source999:       torrent-0001-Configurable-hashers-amount-per-torrent-867.patch
 #Patch1:		erigon-0001-Revert-silkworm-use-silkworm-go-bindings-8829.patch
-Patch1:		erigon-0001-Temporary-use-local-fork-of-a-Torrent-lib.patch
+#Patch1:		erigon-0001-Temporary-use-local-fork-of-a-Torrent-lib.patch
+Patch1:		erigon-0001-Update-torrent-library.patch
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
 BuildRequires: git
@@ -42,6 +44,14 @@ export PATH="${GOPATH}/bin:${PATH}"
 export GIT_COMMIT="%{git_commit}"
 export GIT_BRANCH="%{name}-v%{version}"
 export GIT_TAG="v%{version}"
+
+# FIXME temporary solution
+go get -v github.com/anacrolix/torrent@v1.52.7
+cd ${PWD}/go/pkg/mod/github.com/anacrolix/torrent@v1.52.7
+chmod -R ug+w .
+cat %{SOURCE999} | patch -p1
+chmod -R ug-w .
+
 # Begin building:
 echo "------------ Building Erigon $GIT_TAG from branch $GIT_BRANCH (commit $GIT_COMMIT) ------------"
 make %{name} downloader hack integration observer rpcdaemon rpctest sentry state txpool
