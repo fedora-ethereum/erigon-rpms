@@ -2,10 +2,10 @@
 %global debug_package %{nil}
 # TODO: rig up debug package support with golang.
 
-%global git_commit 9731f7162a5503389eaa65371787d079d9b6f6c4
+%global git_commit 125509e483326d77eb810fdc33a64d30ed98e18f
 
 Name:           erigon
-Version:        2.58.0
+Version:        2.58.2
 Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPLv3
@@ -44,8 +44,8 @@ export GIT_BRANCH="%{name}-v%{version}"
 export GIT_TAG="v%{version}"
 # Begin building:
 echo "------------ Building Erigon $GIT_TAG from branch $GIT_BRANCH (commit $GIT_COMMIT) ------------"
-#make %{name} downloader hack integration observer rpcdaemon rpctest sentry state txpool
-make
+make %{name} downloader hack integration observer rpcdaemon rpctest sentry state txpool
+#make
 echo '# "%{name}" 1 "%{summary}" %{vendor} "User Manuals"' > %{name}.1.md
 cat %{name}.1.md README.md | go-md2man > %{name}.1
 #%%{__gzip} %%{name}.1
