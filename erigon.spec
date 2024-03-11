@@ -2,10 +2,10 @@
 %global debug_package %{nil}
 # TODO: rig up debug package support with golang.
 
-%global git_commit 705814b1ab72f3f25bef5230bd0c4dbaa0bc1f2a
+%global git_commit 9731f7162a5503389eaa65371787d079d9b6f6c4
 
 Name:           erigon
-Version:        2.57.3
+Version:        2.58.0
 Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPLv3
@@ -14,7 +14,7 @@ URL:            https://github.com/ledgerwatch/erigon
 # File sources:
 Source0:        https://github.com/ledgerwatch/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
-Patch1:		erigon-0001-Revert-silkworm-use-silkworm-go-bindings-8829.patch
+#Patch1:		erigon-0001-Revert-silkworm-use-silkworm-go-bindings-8829.patch
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
 BuildRequires: git
