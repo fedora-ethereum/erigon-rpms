@@ -18,6 +18,7 @@ Source999:       torrent-0001-Configurable-hashers-amount-per-torrent-867.patch
 #Patch1:		erigon-0001-Revert-silkworm-use-silkworm-go-bindings-8829.patch
 #Patch1:		erigon-0001-Temporary-use-local-fork-of-a-Torrent-lib.patch
 Patch1:		erigon-0001-Update-torrent-library.patch
+Patch2:		erigon-0002-Disable-silkworm-entirely.patch
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
 BuildRequires: git
