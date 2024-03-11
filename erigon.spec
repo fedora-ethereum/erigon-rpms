@@ -51,6 +51,7 @@ cd ${PWD}/go/pkg/mod/github.com/anacrolix/torrent@v1.52.7
 chmod -R ug+w .
 cat %{SOURCE999} | patch -p1
 chmod -R ug-w .
+cd -
 
 # Begin building:
 echo "------------ Building Erigon $GIT_TAG from branch $GIT_BRANCH (commit $GIT_COMMIT) ------------"
