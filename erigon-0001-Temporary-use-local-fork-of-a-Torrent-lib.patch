@@ -1,0 +1,321 @@
+From: Peter Lemenkov <lemenkov@gmail.com>
+Date: Mon, 11 Mar 2024 20:19:16 +0100
+Subject: [PATCH] Temporary use local fork of a Torrent lib
+
+Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
+
+diff --git a/cmd/downloader/downloadernat/nat.go b/cmd/downloader/downloadernat/nat.go
+index f3b7075f59..326e3f425a 100644
+--- a/cmd/downloader/downloadernat/nat.go
++++ b/cmd/downloader/downloadernat/nat.go
+@@ -1,7 +1,7 @@
+ package downloadernat
+ 
+ import (
+-	"github.com/anacrolix/torrent"
++	"github.com/lemenkov/torrent"
+ 	"github.com/ledgerwatch/erigon/p2p/nat"
+ 	"github.com/ledgerwatch/log/v3"
+ )
+diff --git a/cmd/downloader/main.go b/cmd/downloader/main.go
+index 26a4a48164..58b1e62c14 100644
+--- a/cmd/downloader/main.go
++++ b/cmd/downloader/main.go
+@@ -10,7 +10,7 @@ import (
+ 	"strings"
+ 	"time"
+ 
+-	"github.com/anacrolix/torrent/metainfo"
++	"github.com/lemenkov/torrent/metainfo"
+ 	"github.com/c2h5oh/datasize"
+ 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+ 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+diff --git a/cmd/snapshots/sync/sync.go b/cmd/snapshots/sync/sync.go
+index d6170d6b93..120ecb47fd 100644
+--- a/cmd/snapshots/sync/sync.go
++++ b/cmd/snapshots/sync/sync.go
+@@ -13,9 +13,9 @@ import (
+ 	"strings"
+ 	"time"
+ 
+-	"github.com/anacrolix/torrent"
+-	"github.com/anacrolix/torrent/metainfo"
+-	"github.com/anacrolix/torrent/storage"
++	"github.com/lemenkov/torrent"
++	"github.com/lemenkov/torrent/metainfo"
++	"github.com/lemenkov/torrent/storage"
+ 	"github.com/c2h5oh/datasize"
+ 	"github.com/ledgerwatch/erigon-lib/chain/snapcfg"
+ 	"github.com/ledgerwatch/erigon-lib/common"
+diff --git a/cmd/snapshots/torrents/torrents.go b/cmd/snapshots/torrents/torrents.go
+index 01f01ab6e1..0c7d6557eb 100644
+--- a/cmd/snapshots/torrents/torrents.go
++++ b/cmd/snapshots/torrents/torrents.go
+@@ -14,7 +14,7 @@ import (
+ 
+ 	"github.com/ledgerwatch/log/v3"
+ 
+-	"github.com/anacrolix/torrent/metainfo"
++	"github.com/lemenkov/torrent/metainfo"
+ 	"github.com/ledgerwatch/erigon-lib/downloader"
+ 	"github.com/ledgerwatch/erigon-lib/downloader/snaptype"
+ 	"github.com/ledgerwatch/erigon/cmd/snapshots/manifest"
+diff --git a/erigon-lib/downloader/downloader.go b/erigon-lib/downloader/downloader.go
+index a9548394f9..9a2ec2569e 100644
+--- a/erigon-lib/downloader/downloader.go
++++ b/erigon-lib/downloader/downloader.go
+@@ -32,9 +32,9 @@ import (
+ 	"sync/atomic"
+ 	"time"
+ 
+-	"github.com/anacrolix/torrent"
+-	"github.com/anacrolix/torrent/metainfo"
+-	"github.com/anacrolix/torrent/storage"
++	"github.com/lemenkov/torrent"
++	"github.com/lemenkov/torrent/metainfo"
++	"github.com/lemenkov/torrent/storage"
+ 	"github.com/c2h5oh/datasize"
+ 	"github.com/ledgerwatch/log/v3"
+ 	"github.com/tidwall/btree"
+diff --git a/erigon-lib/downloader/downloader_grpc_server.go b/erigon-lib/downloader/downloader_grpc_server.go
+index 8f448788e8..784d9171c6 100644
+--- a/erigon-lib/downloader/downloader_grpc_server.go
++++ b/erigon-lib/downloader/downloader_grpc_server.go
+@@ -23,7 +23,7 @@ import (
+ 	"path/filepath"
+ 	"time"
+ 
+-	"github.com/anacrolix/torrent/metainfo"
++	"github.com/lemenkov/torrent/metainfo"
+ 	"github.com/ledgerwatch/log/v3"
+ 	"google.golang.org/protobuf/types/known/emptypb"
+ 
+diff --git a/erigon-lib/downloader/downloadercfg/downloadercfg.go b/erigon-lib/downloader/downloadercfg/downloadercfg.go
+index 28efc2e4f4..19b51e9762 100644
+--- a/erigon-lib/downloader/downloadercfg/downloadercfg.go
++++ b/erigon-lib/downloader/downloadercfg/downloadercfg.go
+@@ -27,7 +27,7 @@ import (
+ 
+ 	"github.com/anacrolix/dht/v2"
+ 	lg "github.com/anacrolix/log"
+-	"github.com/anacrolix/torrent"
++	"github.com/lemenkov/torrent"
+ 	"github.com/c2h5oh/datasize"
+ 	"github.com/ledgerwatch/erigon-lib/chain/snapcfg"
+ 	"github.com/ledgerwatch/erigon-lib/common/datadir"
+diff --git a/erigon-lib/downloader/downloadergrpc/client.go b/erigon-lib/downloader/downloadergrpc/client.go
+index c5a85230f7..b7388382ed 100644
+--- a/erigon-lib/downloader/downloadergrpc/client.go
++++ b/erigon-lib/downloader/downloadergrpc/client.go
+@@ -22,7 +22,7 @@ import (
+ 	"fmt"
+ 	"time"
+ 
+-	"github.com/anacrolix/torrent/metainfo"
++	"github.com/lemenkov/torrent/metainfo"
+ 	"github.com/c2h5oh/datasize"
+ 	"github.com/ledgerwatch/erigon-lib/gointerfaces"
+ 	proto_downloader "github.com/ledgerwatch/erigon-lib/gointerfaces/downloader"
+diff --git a/erigon-lib/downloader/mdbx_piece_completion.go b/erigon-lib/downloader/mdbx_piece_completion.go
+index 6f209cd19c..201e3e4e22 100644
+--- a/erigon-lib/downloader/mdbx_piece_completion.go
++++ b/erigon-lib/downloader/mdbx_piece_completion.go
+@@ -20,9 +20,9 @@ import (
+ 	"context"
+ 	"encoding/binary"
+ 
+-	"github.com/anacrolix/torrent/metainfo"
+-	"github.com/anacrolix/torrent/storage"
+-	"github.com/anacrolix/torrent/types/infohash"
++	"github.com/lemenkov/torrent/metainfo"
++	"github.com/lemenkov/torrent/storage"
++	"github.com/lemenkov/torrent/types/infohash"
+ 	"github.com/ledgerwatch/erigon-lib/kv"
+ )
+ 
+@@ -76,7 +76,7 @@ func (m mdbxPieceCompletion) Set(pk metainfo.PieceKey, b bool) error {
+ 	// It will cause 2 cases of in-consistency between files on disk and db metadata:
+ 	//  - Good piece on disk and recent "complete"   db marker lost. Self-Heal by re-download.
+ 	//  - Bad  piece on disk and recent "incomplete" db marker lost. No Self-Heal. Means: can't afford loosing recent "incomplete" markers.
+-	// FYI: Fsync of torrent pieces happenng before storing db markers: https://github.com/anacrolix/torrent/blob/master/torrent.go#L2026
++	// FYI: Fsync of torrent pieces happenng before storing db markers: https://github.com/lemenkov/torrent/blob/master/torrent.go#L2026
+ 	//
+ 	// Mainnet stats:
+ 	//  call amount 2 minutes complete=100K vs incomple=1K
+diff --git a/erigon-lib/downloader/mdbx_piece_completion_test.go b/erigon-lib/downloader/mdbx_piece_completion_test.go
+index c2035501ad..a5e06f75aa 100644
+--- a/erigon-lib/downloader/mdbx_piece_completion_test.go
++++ b/erigon-lib/downloader/mdbx_piece_completion_test.go
+@@ -23,8 +23,8 @@ import (
+ 	"github.com/stretchr/testify/assert"
+ 	"github.com/stretchr/testify/require"
+ 
+-	"github.com/anacrolix/torrent/metainfo"
+-	"github.com/anacrolix/torrent/storage"
++	"github.com/lemenkov/torrent/metainfo"
++	"github.com/lemenkov/torrent/storage"
+ )
+ 
+ func TestMdbxPieceCompletion(t *testing.T) {
+diff --git a/erigon-lib/downloader/snaptype/files.go b/erigon-lib/downloader/snaptype/files.go
+index e95b13ac44..2ce7a250ac 100644
+--- a/erigon-lib/downloader/snaptype/files.go
++++ b/erigon-lib/downloader/snaptype/files.go
+@@ -25,7 +25,7 @@ import (
+ 	"strconv"
+ 	"strings"
+ 
+-	"github.com/anacrolix/torrent/metainfo"
++	"github.com/lemenkov/torrent/metainfo"
+ 
+ 	"github.com/ledgerwatch/erigon-lib/common/cmp"
+ 	"github.com/ledgerwatch/erigon-lib/common/dir"
+diff --git a/erigon-lib/downloader/snaptype/snaptypes.go b/erigon-lib/downloader/snaptype/snaptypes.go
+index c42e9982a2..0acc7855f1 100644
+--- a/erigon-lib/downloader/snaptype/snaptypes.go
++++ b/erigon-lib/downloader/snaptype/snaptypes.go
+@@ -3,7 +3,7 @@ package snaptype
+ import (
+ 	"net/url"
+ 
+-	"github.com/anacrolix/torrent/metainfo"
++	"github.com/lemenkov/torrent/metainfo"
+ )
+ 
+ // Each provider can provide only 1 WebSeed url per file
+diff --git a/erigon-lib/downloader/torrent_files.go b/erigon-lib/downloader/torrent_files.go
+index d8e318e0d1..b1765ef9f5 100644
+--- a/erigon-lib/downloader/torrent_files.go
++++ b/erigon-lib/downloader/torrent_files.go
+@@ -7,8 +7,8 @@ import (
+ 	"strings"
+ 	"sync"
+ 
+-	"github.com/anacrolix/torrent"
+-	"github.com/anacrolix/torrent/metainfo"
++	"github.com/lemenkov/torrent"
++	"github.com/lemenkov/torrent/metainfo"
+ 	"github.com/ledgerwatch/erigon-lib/common/dir"
+ )
+ 
+diff --git a/erigon-lib/downloader/util.go b/erigon-lib/downloader/util.go
+index ab16daa30f..4c9ec1b04b 100644
+--- a/erigon-lib/downloader/util.go
++++ b/erigon-lib/downloader/util.go
+@@ -32,11 +32,11 @@ import (
+ 	"sync/atomic"
+ 	"time"
+ 
+-	"github.com/anacrolix/torrent"
+-	"github.com/anacrolix/torrent/bencode"
+-	"github.com/anacrolix/torrent/metainfo"
+-	"github.com/anacrolix/torrent/mmap_span"
+-	"github.com/anacrolix/torrent/storage"
++	"github.com/lemenkov/torrent"
++	"github.com/lemenkov/torrent/bencode"
++	"github.com/lemenkov/torrent/metainfo"
++	"github.com/lemenkov/torrent/mmap_span"
++	"github.com/lemenkov/torrent/storage"
+ 	"github.com/edsrzf/mmap-go"
+ 	"github.com/ledgerwatch/log/v3"
+ 	"golang.org/x/sync/errgroup"
+diff --git a/erigon-lib/downloader/webseed.go b/erigon-lib/downloader/webseed.go
+index daa54fcf56..bafea8c3b4 100644
+--- a/erigon-lib/downloader/webseed.go
++++ b/erigon-lib/downloader/webseed.go
+@@ -16,8 +16,8 @@ import (
+ 	"github.com/ledgerwatch/erigon-lib/chain/snapcfg"
+ 	"golang.org/x/sync/errgroup"
+ 
+-	"github.com/anacrolix/torrent/bencode"
+-	"github.com/anacrolix/torrent/metainfo"
++	"github.com/lemenkov/torrent/bencode"
++	"github.com/lemenkov/torrent/metainfo"
+ 	"github.com/ledgerwatch/erigon-lib/common/dir"
+ 	"github.com/ledgerwatch/erigon-lib/downloader/snaptype"
+ 	"github.com/ledgerwatch/log/v3"
+diff --git a/erigon-lib/go.mod b/erigon-lib/go.mod
+index 0b3c530af4..d54f0f8c0f 100644
+--- a/erigon-lib/go.mod
++++ b/erigon-lib/go.mod
+@@ -15,7 +15,7 @@ require (
+ 	github.com/anacrolix/dht/v2 v2.20.0
+ 	github.com/anacrolix/go-libutp v1.3.1
+ 	github.com/anacrolix/log v0.14.3-0.20230823030427-4b296d71a6b4
+-	github.com/anacrolix/torrent v1.52.6-0.20231201115409-7ea994b6bbd8
++	github.com/lemenkov/torrent v1.52.9
+ 	github.com/c2h5oh/datasize v0.0.0-20220606134207-859f65c6625b
+ 	github.com/containerd/cgroups/v3 v3.0.2
+ 	github.com/crate-crypto/go-kzg-4844 v0.7.0
+diff --git a/eth/stagedsync/stage_snapshots.go b/eth/stagedsync/stage_snapshots.go
+index 6649dd8dda..b81b93e086 100644
+--- a/eth/stagedsync/stage_snapshots.go
++++ b/eth/stagedsync/stage_snapshots.go
+@@ -20,7 +20,7 @@ import (
+ 	"sync/atomic"
+ 	"time"
+ 
+-	"github.com/anacrolix/torrent"
++	"github.com/lemenkov/torrent"
+ 	"github.com/ledgerwatch/log/v3"
+ 	"golang.org/x/sync/errgroup"
+ 
+diff --git a/go.mod b/go.mod
+index d7fc189c5a..d40319cbfd 100644
+--- a/go.mod
++++ b/go.mod
+@@ -21,7 +21,6 @@ require (
+ 	github.com/alecthomas/kong v0.8.1
+ 	github.com/anacrolix/log v0.14.3-0.20230823030427-4b296d71a6b4
+ 	github.com/anacrolix/sync v0.4.0
+-	github.com/anacrolix/torrent v1.52.6-0.20231201115409-7ea994b6bbd8
+ 	github.com/benesch/cgosymbolizer v0.0.0-20190515212042-bec6fe6e597b
+ 	github.com/btcsuite/btcd/btcec/v2 v2.1.3
+ 	github.com/c2h5oh/datasize v0.0.0-20220606134207-859f65c6625b
+@@ -62,6 +61,7 @@ require (
+ 	github.com/julienschmidt/httprouter v1.3.0
+ 	github.com/klauspost/compress v1.17.3
+ 	github.com/ledgerwatch/erigon-lib v1.0.0
++	github.com/lemenkov/torrent v1.52.9
+ 	github.com/libp2p/go-libp2p v0.31.0
+ 	github.com/libp2p/go-libp2p-mplex v0.9.0
+ 	github.com/libp2p/go-libp2p-pubsub v0.9.3
+diff --git a/go.sum b/go.sum
+index 5c0d0c098f..c007a995b6 100644
+--- a/go.sum
++++ b/go.sum
+@@ -135,8 +135,6 @@ github.com/anacrolix/sync v0.4.0/go.mod h1:BbecHL6jDSExojhNtgTFSBcdGerzNc64tz3DC
+ github.com/anacrolix/tagflag v0.0.0-20180109131632-2146c8d41bf0/go.mod h1:1m2U/K6ZT+JZG0+bdMK6qauP49QT4wE5pmhJXOKKCHw=
+ github.com/anacrolix/tagflag v1.0.0/go.mod h1:1m2U/K6ZT+JZG0+bdMK6qauP49QT4wE5pmhJXOKKCHw=
+ github.com/anacrolix/tagflag v1.1.0/go.mod h1:Scxs9CV10NQatSmbyjqmqmeQNwGzlNe0CMUMIxqHIG8=
+-github.com/anacrolix/torrent v1.52.6-0.20231201115409-7ea994b6bbd8 h1:6EyYT2DsEOZ/WwTDsQ0HXHI996IdT0MZCGP2L6xvfNg=
+-github.com/anacrolix/torrent v1.52.6-0.20231201115409-7ea994b6bbd8/go.mod h1:Ma/WtLey9lU97u2i55LUJ8AnXaL2GfEK6pWh7/9v1hI=
+ github.com/anacrolix/upnp v0.1.3-0.20220123035249-922794e51c96 h1:QAVZ3pN/J4/UziniAhJR2OZ9Ox5kOY2053tBbbqUPYA=
+ github.com/anacrolix/upnp v0.1.3-0.20220123035249-922794e51c96/go.mod h1:Wa6n8cYIdaG35x15aH3Zy6d03f7P728QfdcDeD/IEOs=
+ github.com/anacrolix/utp v0.1.0 h1:FOpQOmIwYsnENnz7tAGohA+r6iXpRjrq8ssKSre2Cp4=
+@@ -526,6 +524,8 @@ github.com/ledgerwatch/log/v3 v3.9.0 h1:iDwrXe0PVwBC68Dd94YSsHbMgQ3ufsgjzXtFNFVZ
+ github.com/ledgerwatch/log/v3 v3.9.0/go.mod h1:EiAY6upmI/6LkNhOVxb4eVsmsP11HZCnZ3PlJMjYiqE=
+ github.com/ledgerwatch/secp256k1 v1.0.0 h1:Usvz87YoTG0uePIV8woOof5cQnLXGYa162rFf3YnwaQ=
+ github.com/ledgerwatch/secp256k1 v1.0.0/go.mod h1:SPmqJFciiF/Q0mPt2jVs2dTr/1TZBTIA+kPMmKgBAak=
++github.com/lemenkov/torrent v1.52.9 h1:5/rq3RGM/XPfkI6DQFCyKvYRBWd933dR12Fph+H6APY=
++github.com/lemenkov/torrent v1.52.9/go.mod h1:EYAZD4LRrE56MNokZ7NpSePTIvLS0oZO2OTvWtEAtF4=
+ github.com/libp2p/go-buffer-pool v0.1.0 h1:oK4mSFcQz7cTQIfqbe4MIj9gLW+mnanjyFtc6cdF0Y8=
+ github.com/libp2p/go-buffer-pool v0.1.0/go.mod h1:N+vh8gMqimBzdKkSMVuydVDq+UV5QTWy5HSiZacSbPg=
+ github.com/libp2p/go-cidranger v1.1.0 h1:ewPN8EZ0dd1LSnrtuwd4709PXVcITVeuwbag38yPW7c=
+diff --git a/p2p/sentry/simulator/syncutil.go b/p2p/sentry/simulator/syncutil.go
+index cfb7074193..0e01351903 100644
+--- a/p2p/sentry/simulator/syncutil.go
++++ b/p2p/sentry/simulator/syncutil.go
+@@ -8,9 +8,9 @@ import (
+ 	"path/filepath"
+ 	"runtime"
+ 
+-	"github.com/anacrolix/torrent"
+-	"github.com/anacrolix/torrent/metainfo"
+-	"github.com/anacrolix/torrent/storage"
++	"github.com/lemenkov/torrent"
++	"github.com/lemenkov/torrent/metainfo"
++	"github.com/lemenkov/torrent/storage"
+ 	"github.com/c2h5oh/datasize"
+ 	"github.com/ledgerwatch/erigon-lib/chain/snapcfg"
+ 	"github.com/ledgerwatch/erigon-lib/common"
