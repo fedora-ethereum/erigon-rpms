@@ -5,7 +5,7 @@ Subject: [PATCH] Upgrade torrent library
 Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
 
 diff --git a/erigon-lib/go.mod b/erigon-lib/go.mod
-index 0b3c530af4..3956df2f5b 100644
+index d85e2256a2..17b1b3e59b 100644
 --- a/erigon-lib/go.mod
 +++ b/erigon-lib/go.mod
 @@ -15,7 +15,7 @@ require (
@@ -18,10 +18,10 @@ index 0b3c530af4..3956df2f5b 100644
  	github.com/containerd/cgroups/v3 v3.0.2
  	github.com/crate-crypto/go-kzg-4844 v0.7.0
 diff --git a/go.mod b/go.mod
-index d7fc189c5a..189c400554 100644
+index 96c02faabe..24c5a00a6e 100644
 --- a/go.mod
 +++ b/go.mod
-@@ -21,7 +21,7 @@ require (
+@@ -22,7 +22,7 @@ require (
  	github.com/alecthomas/kong v0.8.1
  	github.com/anacrolix/log v0.14.3-0.20230823030427-4b296d71a6b4
  	github.com/anacrolix/sync v0.4.0
@@ -31,7 +31,7 @@ index d7fc189c5a..189c400554 100644
  	github.com/btcsuite/btcd/btcec/v2 v2.1.3
  	github.com/c2h5oh/datasize v0.0.0-20220606134207-859f65c6625b
 diff --git a/go.sum b/go.sum
-index 5c0d0c098f..e2b68b47f5 100644
+index 63e70a8b7c..8df51837c0 100644
 --- a/go.sum
 +++ b/go.sum
 @@ -135,8 +135,8 @@ github.com/anacrolix/sync v0.4.0/go.mod h1:BbecHL6jDSExojhNtgTFSBcdGerzNc64tz3DC

@@ -2,10 +2,10 @@
 %global debug_package %{nil}
 # TODO: rig up debug package support with golang.
 
-%global git_commit 125509e483326d77eb810fdc33a64d30ed98e18f
+%global git_commit a013ec25ccc2f42a6948638f0f6bd594bfd55b48
 
 Name:           erigon
-Version:        2.58.2
+Version:        2.59.2
 Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPLv3
@@ -15,9 +15,7 @@ URL:            https://github.com/ledgerwatch/erigon
 Source0:        https://github.com/ledgerwatch/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
 Source999:       torrent-0001-Configurable-hashers-amount-per-torrent-867.patch
-#Patch1:		erigon-0001-Revert-silkworm-use-silkworm-go-bindings-8829.patch
-#Patch1:		erigon-0001-Temporary-use-local-fork-of-a-Torrent-lib.patch
-Patch1:		erigon-0001-Update-torrent-library.patch
+Patch1:		erigon-0001-Upgrade-torrent-library.patch
 Patch2:		erigon-0002-Disable-silkworm-entirely.patch
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
