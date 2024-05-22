@@ -2,10 +2,10 @@
 %global debug_package %{nil}
 # TODO: rig up debug package support with golang.
 
-%global git_commit 7883a4e3c99a22ccc826906f7ecdab61afee74f8
+%global git_commit 088fd8ef69389a72da6faa0fc7903a4ba5726911
 
 Name:           erigon
-Version:        2.60.0
+Version:        2.59.3
 Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPLv3
@@ -14,7 +14,9 @@ URL:            https://github.com/ledgerwatch/erigon
 # File sources:
 Source0:        https://github.com/ledgerwatch/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
-Patch1:		erigon-0001-Disable-silkworm-entirely.patch
+Source999:       torrent-0001-Configurable-hashers-amount-per-torrent-867.patch
+Patch1:		erigon-0001-Upgrade-torrent-library.patch
+Patch2:		erigon-0002-Disable-silkworm-entirely.patch
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
 BuildRequires: git
@@ -41,6 +43,14 @@ export PATH="${GOPATH}/bin:${PATH}"
 export GIT_COMMIT="%{git_commit}"
 export GIT_BRANCH="%{name}-v%{version}"
 export GIT_TAG="v%{version}"
+
+# FIXME temporary solution
+go get -v github.com/anacrolix/torrent@v1.52.7
+cd ${PWD}/go/pkg/mod/github.com/anacrolix/torrent@v1.52.7
+chmod -R ug+w .
+cat %{SOURCE999} | patch -p1
+chmod -R ug-w .
+cd -
 
 # Begin building:
 echo "------------ Building Erigon $GIT_TAG from branch $GIT_BRANCH (commit $GIT_COMMIT) ------------"
