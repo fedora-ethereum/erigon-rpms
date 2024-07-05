@@ -2,19 +2,21 @@
 %global debug_package %{nil}
 # TODO: rig up debug package support with golang.
 
-%global git_commit 7883a4e3c99a22ccc826906f7ecdab61afee74f8
+%global git_commit 2f41075a54a990a5d920e104ed604ab52931e228
 
 Name:           erigon
-Version:        2.60.0
+Version:        2.60.2
 Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
-License:        LGPLv3
+License:        LGPL-3.0-only
 URL:            https://github.com/ledgerwatch/erigon
 
 # File sources:
 Source0:        https://github.com/ledgerwatch/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
+Source1:        erigon.sysusers
 Patch1:		erigon-0001-Disable-silkworm-entirely.patch
+BuildRequires: firewalld-filesystem
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
 BuildRequires: git
@@ -69,23 +71,21 @@ install -m 0644 -D ./%{name}-rpms-%{version}/units/*.service    -t %{buildroot}%
 install -m 0644 -D ./%{name}-rpms-%{version}/firewallsvcs/*.xml -t %{buildroot}%{_prefix}/lib/firewalld/services
 install -m 0644 -D ./%{name}-rpms-%{version}/sysconfig/%{name}  -T %{buildroot}%{_sysconfdir}/sysconfig/%{name}
 install -m 0644 -p -D ./%{name}-rpms-%{version}/tmpfiles/%{name}.conf  -T %{buildroot}%{_tmpfilesdir}/%{name}.conf
+install -m 0644 -p -D %{SOURCE2} %{buildroot}%{_sysusersdir}/%{name}.conf
+
 # And create /var/lib/erigon
 install -d %{buildroot}%{_sharedstatedir}/%{name}
 
 
 %pre
-getent group %{name} > /dev/null || groupadd -r %{name}
-getent passwd %{name} > /dev/null || useradd -r -g %{name} -d %{_sharedstatedir}/%{name} -s /sbin/nologin -c "erigon user" %{name}
+%sysusers_create_compat %{SOURCE2}
 
 %post
-#%%systemd_post et.service
 %firewalld_reload
 
 %preun
-#%%systemd_preun et.service
 
 %postun
-#%%systemd_postun_with_restart et.service
 %firewalld_reload
 
 
@@ -97,6 +97,7 @@ getent passwd %{name} > /dev/null || useradd -r -g %{name} -d %{_sharedstatedir}
 %{_prefix}/lib/firewalld/services/%{name}-*.xml
 %{_prefix}/lib/firewalld/services/%{name}.xml
 %{_tmpfilesdir}/%{name}.conf
+%{_sysusersdir}/%{name}.conf
 %{_unitdir}/%{name}-*service
 %{_unitdir}/%{name}.service
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
