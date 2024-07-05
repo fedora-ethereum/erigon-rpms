@@ -5,10 +5,10 @@ Subject: [PATCH] Disable silkworm entirely
 Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
 
 diff --git a/Makefile b/Makefile
-index ebc5081ac3..d3eedf3190 100644
+index 72dc80016d..bf4401e6d1 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -34,7 +34,7 @@ ifeq ($(shell uname -s), Darwin)
+@@ -35,7 +35,7 @@ ifeq ($(shell uname -s), Darwin)
  endif
  
  # about netgo see: https://github.com/golang/go/issues/30310#issuecomment-471669125 and https://github.com/golang/go/issues/57757
