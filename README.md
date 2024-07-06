@@ -15,4 +15,4 @@ Configuration options are stored into `/etc/sysconfig/erigon` and
 are identical to the command line configuration options that one
 would typically use to start Erigon.
 
-[![Copr build status](https://copr.fedorainfracloud.org/coprs/kwetlesen/Erigon/package/erigon/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/kwetlesen/Erigon/package/erigon/)
+[![Copr build status](https://copr.fedorainfracloud.org/coprs/peter/Erigon/package/erigon/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/peter/Erigon/package/erigon/)
