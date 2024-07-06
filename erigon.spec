@@ -14,7 +14,7 @@ URL:            https://github.com/ledgerwatch/erigon
 # File sources:
 Source0:        https://github.com/ledgerwatch/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
-Source1:        erigon.sysusers
+Source2:        erigon.sysusers
 Patch1:		erigon-0001-Disable-silkworm-entirely.patch
 BuildRequires: firewalld-filesystem
 BuildRequires: gcc >= 10
