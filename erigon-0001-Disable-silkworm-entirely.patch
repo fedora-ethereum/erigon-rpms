@@ -5,7 +5,7 @@ Subject: [PATCH] Disable silkworm entirely
 Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
 
 diff --git a/Makefile b/Makefile
-index 72dc80016d..bf4401e6d1 100644
+index c47a3a97ab..d1e74bc8d2 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -35,7 +35,7 @@ ifeq ($(shell uname -s), Darwin)
