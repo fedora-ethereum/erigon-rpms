@@ -2,10 +2,10 @@
 %global debug_package %{nil}
 # TODO: rig up debug package support with golang.
 
-%global git_commit 93016a97fca65c2376980da19f3944d15e4aacf4
+%global git_commit 93dec9d2067be63cb155016efa05050339e2a8994a
 
 Name:           erigon
-Version:        2.60.7
+Version:        2.60.8
 Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPL-3.0-only
@@ -28,7 +28,6 @@ Requires: firewalld-filesystem
 %description
 An implementation of Ethereum (aka "Ethereum execution client"), on the
 efficiency frontier, written in Go, compatible with the proof-of-stake merge.
-
 
 %prep
 # Build fails with GCC Go, so die unless we can set that alternative:
@@ -75,7 +74,6 @@ install -m 0644 -p -D %{SOURCE2} %{buildroot}%{_sysusersdir}/%{name}.conf
 # And create /var/lib/erigon
 install -d %{buildroot}%{_sharedstatedir}/%{name}
 
-
 %pre
 %sysusers_create_compat %{SOURCE2}
 
@@ -86,7 +84,6 @@ install -d %{buildroot}%{_sharedstatedir}/%{name}
 
 %postun
 %firewalld_reload
-
 
 %files
 %license COPYING COPYING.LESSER
@@ -101,7 +98,6 @@ install -d %{buildroot}%{_sharedstatedir}/%{name}
 %{_unitdir}/%{name}.service
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %dir %attr(-,%{name},%{name}) %{_sharedstatedir}/%{name}
-
 
 %changelog
 %autochangelog
