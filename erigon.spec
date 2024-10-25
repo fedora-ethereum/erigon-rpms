@@ -11,7 +11,7 @@ Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPL-3.0-only
 URL:            https://github.com/ledgerwatch/erigon
 VCS:            git:%{url}.git
-Source0:        %{url}/archive/%{version}/%{name}-%{version}.tar.gz
+Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
 Source2:        erigon.sysusers
 Patch1:		erigon-0001-Disable-silkworm-entirely.patch
