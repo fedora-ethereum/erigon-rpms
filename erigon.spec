@@ -2,10 +2,10 @@
 %global debug_package %{nil}
 # TODO: rig up debug package support with golang.
 
-%global git_commit 3ea0dd41118d780b8813757f564a83d54696e651
+%global git_commit b3129c006b2db60d3d87ec94c05459a2b2d6718f
 
 Name:           erigon
-Version:        2.61.0
+Version:        2.61.1
 Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPL-3.0-only
@@ -48,7 +48,6 @@ make %{name} downloader hack integration observer rpcdaemon rpctest sentry state
 #make
 echo '# "%{name}" 1 "%{summary}" %{vendor} "User Manuals"' > %{name}.1.md
 cat %{name}.1.md README.md | go-md2man > %{name}.1
-#%%{__gzip} %%{name}.1
 %{__rm} %{name}.1.md
 # Rename binaries with common names to [name]-[binary] scheme:
 cd build/bin
