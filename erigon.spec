@@ -87,7 +87,7 @@ install -d %{buildroot}%{_sharedstatedir}/%{name}
 
 %files
 %license COPYING
-%doc AUTHORS README.md TESTING.md
+%doc AUTHORS README.md
 %{_bindir}/*
 %{_mandir}/man1/%{name}.1*
 %{_prefix}/lib/firewalld/services/%{name}-*.xml
