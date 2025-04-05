@@ -86,7 +86,7 @@ install -d %{buildroot}%{_sharedstatedir}/%{name}
 %firewalld_reload
 
 %files
-%license COPYING COPYING.LESSER
+%license COPYING
 %doc AUTHORS README.md TESTING.md
 %{_bindir}/*
 %{_mandir}/man1/%{name}.1*
