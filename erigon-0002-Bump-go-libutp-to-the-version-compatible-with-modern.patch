@@ -8,7 +8,7 @@ See issue anacrolix/go-libutp#30 for further details.
 Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
 
 diff --git a/go.mod b/go.mod
-index ce06a80cfc..f70aa0f374 100644
+index da9f4a42a4..9ece32a8f3 100644
 --- a/go.mod
 +++ b/go.mod
 @@ -143,7 +143,7 @@ require (
@@ -21,7 +21,7 @@ index ce06a80cfc..f70aa0f374 100644
  	github.com/anacrolix/missinggo v1.3.0 // indirect
  	github.com/anacrolix/missinggo/perf v1.0.0 // indirect
 diff --git a/go.sum b/go.sum
-index f81ef40500..1536abc255 100644
+index e930b82bbe..60b69bda02 100644
 --- a/go.sum
 +++ b/go.sum
 @@ -103,8 +103,8 @@ github.com/anacrolix/envpprof v1.3.0 h1:WJt9bpuT7A/CDCxPOv/eeZqHWlle/Y0keJUvc6tc
