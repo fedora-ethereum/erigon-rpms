@@ -14,8 +14,9 @@ VCS:            git:%{url}.git
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
 Source2:        erigon.sysusers
-Patch1:		erigon-0001-Disable-silkworm-entirely.patch
-Patch2:		erigon-0002-Bump-go-libutp-to-the-version-compatible-with-modern.patch
+Patch:		erigon-0001-Disable-silkworm-entirely.patch
+Patch:		erigon-0002-Bump-go-libutp-to-the-version-compatible-with-modern.patch
+Patch:		erigon-0003-A-proper-erigon-snapshot-version.patch
 BuildRequires: firewalld-filesystem
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
