@@ -2,10 +2,10 @@
 %global debug_package %{nil}
 # TODO: rig up debug package support with golang.
 
-%global git_commit 81d661fe1330f1188e23bb3afc688fe9c6841993
+%global git_commit 406d855fc92f646fab8c0a88313f51ba60badbab
 
 Name:           erigon
-Version:        3.0.3
+Version:        3.0.4
 Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPL-3.0-only
@@ -15,8 +15,6 @@ Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
 Source2:        erigon.sysusers
 Patch:		erigon-0001-Disable-silkworm-entirely.patch
-Patch:		erigon-0002-Bump-go-libutp-to-the-version-compatible-with-modern.patch
-Patch:		erigon-0003-A-proper-erigon-snapshot-version.patch
 BuildRequires: firewalld-filesystem
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
