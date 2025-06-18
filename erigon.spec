@@ -14,7 +14,6 @@ VCS:            git:%{url}.git
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
 Source2:        erigon.sysusers
-Patch:		erigon-0001-Disable-silkworm-entirely.patch
 BuildRequires: firewalld-filesystem
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
@@ -44,8 +43,7 @@ export GIT_TAG="v%{version}"
 
 # Begin building:
 echo "------------ Building Erigon $GIT_TAG from branch $GIT_BRANCH (commit $GIT_COMMIT) ------------"
-make %{name} downloader hack integration observer rpcdaemon rpctest sentry state txpool
-#make
+make BUILD_TAGS=nosqlite,noboltdb,nosilkworm %{name} downloader hack integration observer rpcdaemon rpctest sentry state txpool
 echo '# "%{name}" 1 "%{summary}" %{vendor} "User Manuals"' > %{name}.1.md
 cat %{name}.1.md README.md | go-md2man > %{name}.1
 %{__rm} %{name}.1.md
