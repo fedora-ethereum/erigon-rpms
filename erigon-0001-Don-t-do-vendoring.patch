@@ -1,0 +1,18 @@
+From: Peter Lemenkov <lemenkov@gmail.com>
+Date: Tue, 24 Jun 2025 11:00:25 +0200
+Subject: [PATCH] Don't do vendoring
+
+Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
+
+diff --git a/Makefile b/Makefile
+index e6594db917..e6988aa065 100644
+--- a/Makefile
++++ b/Makefile
+@@ -159,7 +159,6 @@ all: erigon $(COMMANDS)
+ db-tools:
+ 	@echo "Building db-tools"
+ 
+-	go mod vendor
+ 	cd vendor/github.com/erigontech/mdbx-go && MDBX_BUILD_TIMESTAMP=unknown make tools
+ 	mkdir -p $(GOBIN)
+ 	cd vendor/github.com/erigontech/mdbx-go/libmdbx && cp mdbx_chk $(GOBIN) && cp mdbx_copy $(GOBIN) && cp mdbx_dump $(GOBIN) && cp mdbx_drop $(GOBIN) && cp mdbx_load $(GOBIN) && cp mdbx_stat $(GOBIN)
