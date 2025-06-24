@@ -31,7 +31,9 @@ An implementation of Ethereum (aka "Ethereum execution client"), on the
 efficiency frontier, written in Go, compatible with the proof-of-stake merge.
 
 %prep
-%autosetup -p1
+# Build fails with GCC Go, so die unless we can set that alternative:
+%autosetup -b 0 -p1
+%setup -a 1 -T -D -n %{name}-%{version
 
 %build
 export GOPATH="${PWD}/go"
