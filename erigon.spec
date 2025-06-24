@@ -2,10 +2,10 @@
 %global debug_package %{nil}
 # TODO: rig up debug package support with golang.
 
-%global git_commit 3fa9464f4ebe5135e3f6e53eccac9ee84ca0496f
+%global git_commit dd8cb4808fed197c04be1f0d4369ed1c9e667eb5
 
 Name:           erigon
-Version:        3.0.7
+Version:        3.0.8
 Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPL-3.0-only
@@ -14,10 +14,12 @@ VCS:            git:%{url}.git
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
 Source2:        erigon.sysusers
+Patch:		erigon-0001-Don-t-do-vendoring.patch
 BuildRequires: firewalld-filesystem
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
 BuildRequires: git
+# Build fails with GCC Go, so die unless we can set that alternative:
 BuildRequires: golang
 BuildRequires: golang-github-cpuguy83-md2man
 BuildRequires: sed
@@ -29,10 +31,7 @@ An implementation of Ethereum (aka "Ethereum execution client"), on the
 efficiency frontier, written in Go, compatible with the proof-of-stake merge.
 
 %prep
-# Build fails with GCC Go, so die unless we can set that alternative:
-%autosetup -b 0 -p1
-%setup -a 1 -T -D -n %{name}-%{version}
-sed -i -e "/go mod vendor/d" Makefile
+%autosetup -p1
 
 %build
 export GOPATH="${PWD}/go"
