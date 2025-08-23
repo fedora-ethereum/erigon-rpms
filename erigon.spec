@@ -2,17 +2,17 @@
 %global debug_package %{nil}
 # TODO: rig up debug package support with golang.
 
-%global git_commit 1a610b3f574dbe371ccbb78c010188588565d099
+%global git_commit 8d26a7d2a4570875f556fcbf0fa6344238a2bd42
 
 Name:           erigon
-Version:        3.0.15
-Release:        %autorelease
+Version:        3.1.0
+Release:        %autorelease -p -s rc1
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPL-3.0-only
 URL:            https://github.com/ledgerwatch/erigon
 VCS:            git:%{url}.git
-Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
-Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
+Source0:        %{url}/archive/v%{version}-rc1/%{name}-%{version}-rc1.tar.gz
+Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}-rc1/%{name}-rpms-%{version}-rc1.tar.gz
 Source2:        erigon.sysusers
 Patch:		erigon-0001-Don-t-do-vendoring.patch
 BuildRequires: firewalld-filesystem
