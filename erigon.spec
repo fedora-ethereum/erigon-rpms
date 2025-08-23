@@ -63,10 +63,10 @@ rm -rf ${GOPATH}
 %install
 install -m 0755 -D ./build/bin/* -t %{buildroot}%{_bindir}
 install -m 0644 -D ./%{name}.1   -t %{buildroot}%{_mandir}/man1
-install -m 0644 -D ./%{name}-rpms-%{version}/units/*.service    -t %{buildroot}%{_prefix}/lib/systemd/system
-install -m 0644 -D ./%{name}-rpms-%{version}/firewallsvcs/*.xml -t %{buildroot}%{_prefix}/lib/firewalld/services
-install -m 0644 -D ./%{name}-rpms-%{version}/sysconfig/%{name}  -T %{buildroot}%{_sysconfdir}/sysconfig/%{name}
-install -m 0644 -p -D ./%{name}-rpms-%{version}/tmpfiles/%{name}.conf  -T %{buildroot}%{_tmpfilesdir}/%{name}.conf
+install -m 0644 -D ./%{name}-rpms-%{version}-rc1/units/*.service    -t %{buildroot}%{_prefix}/lib/systemd/system
+install -m 0644 -D ./%{name}-rpms-%{version}-rc1/firewallsvcs/*.xml -t %{buildroot}%{_prefix}/lib/firewalld/services
+install -m 0644 -D ./%{name}-rpms-%{version}-rc1/sysconfig/%{name}  -T %{buildroot}%{_sysconfdir}/sysconfig/%{name}
+install -m 0644 -p -D ./%{name}-rpms-%{version}-rc1/tmpfiles/%{name}.conf  -T %{buildroot}%{_tmpfilesdir}/%{name}.conf
 install -m 0644 -p -D %{SOURCE2} %{buildroot}%{_sysusersdir}/%{name}.conf
 
 # And create /var/lib/erigon
