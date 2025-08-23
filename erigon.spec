@@ -32,7 +32,7 @@ efficiency frontier, written in Go, compatible with the proof-of-stake merge.
 
 %prep
 # Build fails with GCC Go, so die unless we can set that alternative:
-%autosetup -b 0 -p1
+%autosetup -b 0 -p1 -n %{name}-%{version}-rc1
 %setup -a 1 -T -D -n %{name}-%{version}-rc1
 
 %build
