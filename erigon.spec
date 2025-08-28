@@ -15,6 +15,9 @@ Source0:        %{url}/archive/v%{version}-rc1/%{name}-%{version}-rc1.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}-rc1/%{name}-rpms-%{version}-rc1.tar.gz
 Source2:        erigon.sysusers
 Patch:		erigon-0001-Don-t-do-vendoring.patch
+Patch:		erigon-0002-r31-kv-mdbx-revert-nosync-periodic-flusher-16781.patch
+Patch:		erigon-0003-cp-fix-wrong-header-used-in-getLogsV3-16846.patch
+Patch:		erigon-0004-snapshotsync-fix-minimal-nodes-downloading-all-snaps.patch
 BuildRequires: firewalld-filesystem
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
