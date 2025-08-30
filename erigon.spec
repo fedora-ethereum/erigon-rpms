@@ -18,8 +18,8 @@ Patch:		erigon-0001-Don-t-do-vendoring.patch
 Patch:		erigon-0002-r31-kv-mdbx-revert-nosync-periodic-flusher-16781.patch
 Patch:		erigon-0003-cp-fix-wrong-header-used-in-getLogsV3-16846.patch
 Patch:		erigon-0004-snapshotsync-fix-minimal-nodes-downloading-all-snaps.patch
-Patch:		erigon-0005-Improve-snapshots-reset-action.patch
-Patch:		erigon-0006-Pull-torrent-fix-for-webseed-cancellation-and-websee.patch
+Patch:		erigon-0005-Pull-torrent-fix-for-webseed-cancellation-and-websee.patch
+Patch:		erigon-0006-Improve-snapshots-reset-action-16792.patch
 BuildRequires: firewalld-filesystem
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10

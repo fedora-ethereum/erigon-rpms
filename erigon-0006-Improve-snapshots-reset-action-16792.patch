@@ -1,11 +1,13 @@
 From: Matt Joiner <anacrolix@gmail.com>
-Date: Mon, 25 Aug 2025 12:14:41 +1000
-Subject: [PATCH] Improve snapshots reset action
+Date: Fri, 29 Aug 2025 21:56:25 +1000
+Subject: [PATCH] Improve snapshots reset action (#16792)
 
-- Handles missing or obsolete format chaindata (Fixes #16717 and https://discord.com/channels/1133875232453693480/1356926710502916096/1407195677930295348).
-- Fixes double logging setup (observed on Discord a few times but I missed it).
-- Correctly loads chain flag setup from parent CLI contexts.
-- Requires datadir and chain to be set on parent context (proper urfave/cli@v2 behaviour).
+- Handles missing or obsolete format chaindata (Fixes #16717 and
+https://discord.com/channels/1133875232453693480/1356926710502916096/1407195677930295348).
+- Fixes double logging setup (observed on Discord a few times but I
+missed it).
+- Correctly loads _explicit_ chain flag "IsSet" setup from parent CLI
+contexts.
 - Logs datadir operated on (so default datadir action is clear).
 
 diff --git a/.github/workflows/qa-tip-tracking.yml b/.github/workflows/qa-tip-tracking.yml
@@ -147,22 +149,70 @@ index 2469dbd6cb..14ec217f65 100644
  	var db kv.RoDB
  	db, err = mdbx.New(kv.ChainDB, logger).Path(chainDataDir).Accede(true).Readonly(true).Open(ctx)
 diff --git a/turbo/app/snapshots_cmd.go b/turbo/app/snapshots_cmd.go
-index 78f51820e2..418f74e4e1 100644
+index 78f51820e2..d2ee07b0ef 100644
 --- a/turbo/app/snapshots_cmd.go
 +++ b/turbo/app/snapshots_cmd.go
-@@ -278,14 +278,13 @@ var snapshotCommand = cli.Command{
+@@ -92,19 +92,38 @@ func joinFlags(lists ...[]cli.Flag) (res []cli.Flag) {
+ 	return res
+ }
+ 
++// This needs to run *after* subcommand arguments are parsed, in case they alter root flags like data dir.
++func commonBeforeSnapshotCommand(cliCtx *cli.Context) error {
++	go mem.LogMemStats(cliCtx.Context, log.New())
++	go disk.UpdateDiskStats(cliCtx.Context, log.New())
++	_, _, _, _, err := debug.Setup(cliCtx, true /* rootLogger */)
++	if err != nil {
++		return err
++	}
++	return nil
++}
++
++func init() {
++	// Inject commonBeforeSnapshotCommand into all snapshot subcommands Before handlers.
++	for _, cmd := range snapshotCommand.Subcommands {
++		oldBefore := cmd.Before
++		cmd.Before = func(cliCtx *cli.Context) error {
++			err := commonBeforeSnapshotCommand(cliCtx)
++			if err != nil {
++				return fmt.Errorf("common before snapshot subcommand: %w", err)
++			}
++			if oldBefore == nil {
++				return nil
++			}
++			return oldBefore(cliCtx)
++		}
++	}
++}
++
+ var snapshotCommand = cli.Command{
+ 	Name:    "snapshots",
+ 	Aliases: []string{"seg", "snapshot", "segments", "segment"},
+ 	Usage:   `Managing historical data segments (partitions)`,
+-	Before: func(cliCtx *cli.Context) error {
+-		go mem.LogMemStats(cliCtx.Context, log.New())
+-		go disk.UpdateDiskStats(cliCtx.Context, log.New())
+-		_, _, _, _, err := debug.Setup(cliCtx, true /* rootLogger */)
+-		if err != nil {
+-			return err
+-		}
+-		return nil
+-	},
+ 	Subcommands: []*cli.Command{
+ 		{
+ 			Name: "ls",
+@@ -278,14 +297,15 @@ var snapshotCommand = cli.Command{
  			Name:   "reset",
  			Usage:  "Reset state to resumable initial sync",
  			Action: resetCliAction,
 -			// Something to alter snapcfg.snapshotGitBranch would go here, or should you set the environment variable?
 -			Flags: append(
 -				slices.Clone(logging.Flags),
--				&utils.DataDirFlag,
--				&utils.ChainFlag,
 +			// Something to alter snapcfg.snapshotGitBranch would go here, or should you set the
 +			// environment variable? Followup: It would not go here, as it could modify behaviour in
 +			// parent commands.
 +			Flags: []cli.Flag{
+ 				&utils.DataDirFlag,
+ 				&utils.ChainFlag,
  				&dryRunFlag,
  				&removeLocalFlag,
 -			),
