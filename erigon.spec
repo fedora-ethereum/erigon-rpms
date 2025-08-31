@@ -20,6 +20,8 @@ Patch:		erigon-0003-cp-fix-wrong-header-used-in-getLogsV3-16846.patch
 Patch:		erigon-0004-snapshotsync-fix-minimal-nodes-downloading-all-snaps.patch
 Patch:		erigon-0005-Pull-torrent-fix-for-webseed-cancellation-and-websee.patch
 Patch:		erigon-0006-Improve-snapshots-reset-action-16792.patch
+Patch:		erigon-0007-Revert-Don-t-do-vendoring.patch
+Patch:		erigon-0008-Pull-another-fix-for-unique-webseed-request-panic.patch
 BuildRequires: firewalld-filesystem
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
