@@ -22,6 +22,7 @@ Patch:		erigon-0005-Pull-torrent-fix-for-webseed-cancellation-and-websee.patch
 Patch:		erigon-0006-Improve-snapshots-reset-action-16792.patch
 Patch:		erigon-0007-Revert-Don-t-do-vendoring.patch
 Patch:		erigon-0008-Pull-another-fix-for-unique-webseed-request-panic.patch
+Patch:		erigon-0009-Fix-panic-on-index-out-of-range-in-torrent-lib-16990.patch
 BuildRequires: firewalld-filesystem
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
