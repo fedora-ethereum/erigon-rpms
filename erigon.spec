@@ -1,28 +1,15 @@
-# Disable the debug package as we don't provide it:
-%global debug_package %{nil}
-# TODO: rig up debug package support with golang.
-
-%global git_commit 8d26a7d2a4570875f556fcbf0fa6344238a2bd42
+%global git_commit 4e2977042ee93ff4f95ed94a4dc8aa674bbbe06b
 
 Name:           erigon
 Version:        3.1.0
-Release:        %autorelease -p -s rc1
+Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPL-3.0-only
 URL:            https://github.com/ledgerwatch/erigon
 VCS:            git:%{url}.git
-Source0:        %{url}/archive/v%{version}-rc1/%{name}-%{version}-rc1.tar.gz
-Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}-rc1/%{name}-rpms-%{version}-rc1.tar.gz
+Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
+Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
 Source2:        erigon.sysusers
-Patch:		erigon-0001-Don-t-do-vendoring.patch
-Patch:		erigon-0002-r31-kv-mdbx-revert-nosync-periodic-flusher-16781.patch
-Patch:		erigon-0003-cp-fix-wrong-header-used-in-getLogsV3-16846.patch
-Patch:		erigon-0004-snapshotsync-fix-minimal-nodes-downloading-all-snaps.patch
-Patch:		erigon-0005-Pull-torrent-fix-for-webseed-cancellation-and-websee.patch
-Patch:		erigon-0006-Improve-snapshots-reset-action-16792.patch
-Patch:		erigon-0007-Revert-Don-t-do-vendoring.patch
-Patch:		erigon-0008-Pull-another-fix-for-unique-webseed-request-panic.patch
-Patch:		erigon-0009-Fix-panic-on-index-out-of-range-in-torrent-lib-16990.patch
 BuildRequires: firewalld-filesystem
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
@@ -40,8 +27,8 @@ efficiency frontier, written in Go, compatible with the proof-of-stake merge.
 
 %prep
 # Build fails with GCC Go, so die unless we can set that alternative:
-%autosetup -b 0 -p1 -n %{name}-%{version}-rc1
-%setup -a 1 -T -D -n %{name}-%{version}-rc1
+%autosetup -b 0 -p1 -n %{name}-%{version}
+%setup -a 1 -T -D -n %{name}-%{version}
 
 %build
 export GOPATH="${PWD}/go"
@@ -71,10 +58,10 @@ rm -rf ${GOPATH}
 %install
 install -m 0755 -D ./build/bin/* -t %{buildroot}%{_bindir}
 install -m 0644 -D ./%{name}.1   -t %{buildroot}%{_mandir}/man1
-install -m 0644 -D ./%{name}-rpms-%{version}-rc1/units/*.service    -t %{buildroot}%{_prefix}/lib/systemd/system
-install -m 0644 -D ./%{name}-rpms-%{version}-rc1/firewallsvcs/*.xml -t %{buildroot}%{_prefix}/lib/firewalld/services
-install -m 0644 -D ./%{name}-rpms-%{version}-rc1/sysconfig/%{name}  -T %{buildroot}%{_sysconfdir}/sysconfig/%{name}
-install -m 0644 -p -D ./%{name}-rpms-%{version}-rc1/tmpfiles/%{name}.conf  -T %{buildroot}%{_tmpfilesdir}/%{name}.conf
+install -m 0644 -D ./%{name}-rpms-%{version}/units/*.service    -t %{buildroot}%{_prefix}/lib/systemd/system
+install -m 0644 -D ./%{name}-rpms-%{version}/firewallsvcs/*.xml -t %{buildroot}%{_prefix}/lib/firewalld/services
+install -m 0644 -D ./%{name}-rpms-%{version}/sysconfig/%{name}  -T %{buildroot}%{_sysconfdir}/sysconfig/%{name}
+install -m 0644 -p -D ./%{name}-rpms-%{version}/tmpfiles/%{name}.conf  -T %{buildroot}%{_tmpfilesdir}/%{name}.conf
 install -m 0644 -p -D %{SOURCE2} %{buildroot}%{_sysusersdir}/%{name}.conf
 
 # And create /var/lib/erigon
