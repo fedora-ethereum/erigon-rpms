@@ -39,7 +39,7 @@ export GIT_TAG="v%{version}"
 
 # Begin building:
 echo "------------ Building Erigon $GIT_TAG from branch $GIT_BRANCH (commit $GIT_COMMIT) ------------"
-make BUILD_TAGS=nosqlite,noboltdb,nosilkworm %{name} downloader hack integration observer rpcdaemon rpctest sentry state txpool
+make BUILD_TAGS=nosqlite,noboltdb,nosilkworm %{name} downloader hack integration rpcdaemon rpctest sentry state txpool
 echo '# "%{name}" 1 "%{summary}" %{vendor} "User Manuals"' > %{name}.1.md
 cat %{name}.1.md README.md | go-md2man > %{name}.1
 %{__rm} %{name}.1.md
