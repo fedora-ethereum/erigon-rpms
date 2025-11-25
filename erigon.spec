@@ -1,7 +1,7 @@
-%global git_commit bc54d33cc4c9e2f44f3bbb30576560935ad2b40b
+%global git_commit a7f74f7eb5835ac445a3a7bf5e33e20ba5e9cb4a
 
 Name:           erigon
-Version:        3.2.2
+Version:        3.2.3
 Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPL-3.0-only
