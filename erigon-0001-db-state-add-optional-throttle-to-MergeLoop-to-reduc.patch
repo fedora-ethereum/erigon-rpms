@@ -1,0 +1,73 @@
+From: Peter Lemenkov <lemenkov@gmail.com>
+Date: Mon, 29 Dec 2025 02:45:03 +0100
+Subject: [PATCH] db/state: add optional throttle to MergeLoop to reduce disk
+ I/O pressure
+
+The MergeLoop background goroutine performs continuous heavy disk I/O
+when merging state files. This saturates disk (90%+ utilization),
+blocking block execution which competes for the same storage.
+
+Symptoms observed:
+- Block drift increases during merge operations
+- Synchronized stalls across nodes at similar block heights
+- RPC timeouts and degraded service
+
+Add ERIGON_MERGE_THROTTLE_MS environment variable to insert a pause
+between merge operations. This reduces disk contention and allows
+operators to desynchronize merge timing across a node fleet.
+
+Usage:
+  ERIGON_MERGE_THROTTLE_MS=500 ./erigon ...
+
+Default behavior (no throttle) is preserved when unset.
+
+Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
+Assisted-by: Claude (Anthropic) <https://claude.ai>
+
+diff --git a/db/state/aggregator.go b/db/state/aggregator.go
+index 7d9706fb37..2ce0b994ea 100644
+--- a/db/state/aggregator.go
++++ b/db/state/aggregator.go
+@@ -871,6 +871,15 @@ func (a *Aggregator) RemoveOverlapsAfterMerge(ctx context.Context) (err error) {
+ 	return nil
+ }
+ 
++func getMergeThrottleMs() int {
++	if v := os.Getenv("ERIGON_MERGE_THROTTLE_MS"); v != "" {
++		if ms, err := strconv.Atoi(v); err == nil && ms > 0 {
++			return ms
++		}
++	}
++	return 0
++}
++
+ func (a *Aggregator) MergeLoop(ctx context.Context) (err error) {
+ 	if dbg.NoMerge() || !a.mergingFiles.CompareAndSwap(false, true) {
+ 		return nil // currently merging or merge is prohibited
+@@ -888,6 +897,11 @@ func (a *Aggregator) MergeLoop(ctx context.Context) (err error) {
+ 	defer a.wg.Done()
+ 	defer a.mergingFiles.Store(false)
+ 
++	mergeThrottleMs := getMergeThrottleMs()
++	if mergeThrottleMs > 0 {
++		log.Info("[snapshots] MergeLoop throttle enabled", "delay_ms", mergeThrottleMs)
++	}
++
+ 	for {
+ 		somethingMerged, err := a.mergeLoopStep(ctx, a.visibleFilesMinimaxTxNum.Load())
+ 		if err != nil {
+@@ -896,6 +910,14 @@ func (a *Aggregator) MergeLoop(ctx context.Context) (err error) {
+ 		if !somethingMerged {
+ 			return nil
+ 		}
++
++		if mergeThrottleMs > 0 {
++			select {
++			case <-ctx.Done():
++				return ctx.Err()
++			case <-time.After(time.Duration(mergeThrottleMs) * time.Millisecond):
++			}
++		}
+ 	}
+ }
+ 

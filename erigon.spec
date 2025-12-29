@@ -10,6 +10,7 @@ VCS:            git:%{url}.git
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
 Source2:        erigon.sysusers
+Patch:          erigon-0001-db-state-add-optional-throttle-to-MergeLoop-to-reduc.patch
 BuildRequires: firewalld-filesystem
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
