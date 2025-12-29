@@ -25,10 +25,18 @@ Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
 Assisted-by: Claude (Anthropic) <https://claude.ai>
 
 diff --git a/db/state/aggregator.go b/db/state/aggregator.go
-index 7d9706fb37..2ce0b994ea 100644
+index 7d9706fb37..f9b4eff34b 100644
 --- a/db/state/aggregator.go
 +++ b/db/state/aggregator.go
-@@ -871,6 +871,15 @@ func (a *Aggregator) RemoveOverlapsAfterMerge(ctx context.Context) (err error) {
+@@ -27,6 +27,7 @@ import (
+ 	"runtime"
+ 	"slices"
+ 	"strings"
++	"strconv"
+ 	"sync"
+ 	"sync/atomic"
+ 	"time"
+@@ -871,6 +872,15 @@ func (a *Aggregator) RemoveOverlapsAfterMerge(ctx context.Context) (err error) {
  	return nil
  }
  
@@ -44,7 +52,7 @@ index 7d9706fb37..2ce0b994ea 100644
  func (a *Aggregator) MergeLoop(ctx context.Context) (err error) {
  	if dbg.NoMerge() || !a.mergingFiles.CompareAndSwap(false, true) {
  		return nil // currently merging or merge is prohibited
-@@ -888,6 +897,11 @@ func (a *Aggregator) MergeLoop(ctx context.Context) (err error) {
+@@ -888,6 +898,11 @@ func (a *Aggregator) MergeLoop(ctx context.Context) (err error) {
  	defer a.wg.Done()
  	defer a.mergingFiles.Store(false)
  
@@ -56,7 +64,7 @@ index 7d9706fb37..2ce0b994ea 100644
  	for {
  		somethingMerged, err := a.mergeLoopStep(ctx, a.visibleFilesMinimaxTxNum.Load())
  		if err != nil {
-@@ -896,6 +910,14 @@ func (a *Aggregator) MergeLoop(ctx context.Context) (err error) {
+@@ -896,6 +911,14 @@ func (a *Aggregator) MergeLoop(ctx context.Context) (err error) {
  		if !somethingMerged {
  			return nil
  		}

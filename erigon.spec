@@ -2,7 +2,7 @@
 
 Name:           erigon
 Version:        3.3.2
-Release:        %autorelease
+Release:        2%{?dist}
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPL-3.0-only
 URL:            https://github.com/ledgerwatch/erigon
