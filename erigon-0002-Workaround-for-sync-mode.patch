@@ -5,14 +5,14 @@ Subject: [PATCH] Workaround for sync mode
 Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
 
 diff --git a/db/kv/mdbx/kv_mdbx.go b/db/kv/mdbx/kv_mdbx.go
-index 785acdd2e4..ac03d4cb0e 100644
+index 785acdd2e4..df46711d99 100644
 --- a/db/kv/mdbx/kv_mdbx.go
 +++ b/db/kv/mdbx/kv_mdbx.go
 @@ -94,9 +94,14 @@ const DefaultMapSize = 2 * datasize.TB
  const DefaultGrowthStep = 1 * datasize.GB
  
  func New(label kv.Label, log log.Logger) MdbxOpts {
-+	syncMode := mdbx.Durable
++	var syncMode mdbx.Flags = mdbx.Durable
 +	if os.Getenv("ERIGON_MDBX_NOSYNC") == "1" {
 +		syncMode = mdbx.SafeNoSync
 +	}
