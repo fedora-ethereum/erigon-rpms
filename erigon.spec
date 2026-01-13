@@ -2,7 +2,7 @@
 
 Name:           erigon
 Version:        3.3.2
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPL-3.0-only
 URL:            https://github.com/ledgerwatch/erigon
@@ -12,6 +12,8 @@ Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{versi
 Source2:        erigon.sysusers
 Patch:          erigon-0001-db-state-add-optional-throttle-to-MergeLoop-to-reduc.patch
 Patch:          erigon-0002-Workaround-for-sync-mode.patch
+Patch:          erigon-0003-Revert-Workaround-for-sync-mode.patch
+Patch:          erigon-0004-db-downloader-make-torrent-generation-reproducible.patch
 BuildRequires: firewalld-filesystem
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10

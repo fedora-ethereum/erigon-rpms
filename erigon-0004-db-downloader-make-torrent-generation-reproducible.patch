@@ -1,0 +1,33 @@
+From: Peter Lemenkov <lemenkov@gmail.com>
+Date: Tue, 13 Jan 2026 21:26:34 +0100
+Subject: [PATCH] db/downloader: make torrent generation reproducible
+
+Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
+Assisted-by: Claude (Anthropic) <https://claude.ai>
+
+diff --git a/db/downloader/util.go b/db/downloader/util.go
+index f89150127d..b1f9afd58b 100644
+--- a/db/downloader/util.go
++++ b/db/downloader/util.go
+@@ -239,6 +239,12 @@ Loop:
+ 	return int(createdAmount.Load()), nil
+ }
+ 
++const (
++	// ErigonGenesisTimestamp is the Unix timestamp of Erigon's first commit
++	// (Thu Dec 26 12:45:52 2013 +0100). Used for reproducible torrent generation.
++	ErigonGenesisTimestamp int64 = 1388058352
++)
++
+ func CreateMetaInfo(info *metainfo.Info, mi *metainfo.MetaInfo) (*metainfo.MetaInfo, error) {
+ 	if mi == nil {
+ 		infoBytes, err := bencode.Marshal(info)
+@@ -246,7 +252,7 @@ func CreateMetaInfo(info *metainfo.Info, mi *metainfo.MetaInfo) (*metainfo.MetaI
+ 			return nil, err
+ 		}
+ 		mi = &metainfo.MetaInfo{
+-			CreationDate: time.Now().Unix(),
++			CreationDate: ErigonGenesisTimestamp,
+ 			// TODO: Differentiate direct web source vs generated locally.
+ 			CreatedBy:    "erigon",
+ 			InfoBytes:    infoBytes,

@@ -1,0 +1,26 @@
+From: Peter Lemenkov <lemenkov@gmail.com>
+Date: Tue, 13 Jan 2026 20:25:12 +0100
+Subject: [PATCH] Revert "Workaround for sync mode"
+
+This reverts commit 30911b19138db0b953d2e9d6365377006424c796.
+
+diff --git a/db/kv/mdbx/kv_mdbx.go b/db/kv/mdbx/kv_mdbx.go
+index 80c991ff67..785acdd2e4 100644
+--- a/db/kv/mdbx/kv_mdbx.go
++++ b/db/kv/mdbx/kv_mdbx.go
+@@ -94,14 +94,9 @@ const DefaultMapSize = 2 * datasize.TB
+ const DefaultGrowthStep = 1 * datasize.GB
+ 
+ func New(label kv.Label, log log.Logger) MdbxOpts {
+-	var syncMode uint = mdbx.Durable
+-	if os.Getenv("ERIGON_MDBX_NOSYNC") == "1" {
+-		syncMode = mdbx.SafeNoSync
+-	}
+-
+ 	opts := MdbxOpts{
+ 		bucketsCfg: WithChaindataTables,
+-		flags:      mdbx.NoReadahead | syncMode,
++		flags:      mdbx.NoReadahead | mdbx.Durable,
+ 		log:        log,
+ 		pageSize:   kv.DefaultPageSize(),
+ 
