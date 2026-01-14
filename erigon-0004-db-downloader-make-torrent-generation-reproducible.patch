@@ -6,7 +6,7 @@ Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
 Assisted-by: Claude (Anthropic) <https://claude.ai>
 
 diff --git a/db/downloader/util.go b/db/downloader/util.go
-index f89150127d..55cf968734 100644
+index f89150127d..8ceedd00ad 100644
 --- a/db/downloader/util.go
 +++ b/db/downloader/util.go
 @@ -239,6 +239,12 @@ Loop:
@@ -34,7 +34,7 @@ index f89150127d..55cf968734 100644
  			AnnounceList: Trackers,
  		}
  	} else {
-+		mi.CreationDate = ErigonGenesisTimestamp,
++		mi.CreationDate = ErigonGenesisTimestamp
  		mi.AnnounceList = Trackers
  	}
  	return mi, nil
