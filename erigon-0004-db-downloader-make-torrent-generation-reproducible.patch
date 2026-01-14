@@ -6,7 +6,7 @@ Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
 Assisted-by: Claude (Anthropic) <https://claude.ai>
 
 diff --git a/db/downloader/util.go b/db/downloader/util.go
-index f89150127d..b1f9afd58b 100644
+index f89150127d..55cf968734 100644
 --- a/db/downloader/util.go
 +++ b/db/downloader/util.go
 @@ -239,6 +239,12 @@ Loop:
@@ -22,7 +22,7 @@ index f89150127d..b1f9afd58b 100644
  func CreateMetaInfo(info *metainfo.Info, mi *metainfo.MetaInfo) (*metainfo.MetaInfo, error) {
  	if mi == nil {
  		infoBytes, err := bencode.Marshal(info)
-@@ -246,7 +252,7 @@ func CreateMetaInfo(info *metainfo.Info, mi *metainfo.MetaInfo) (*metainfo.MetaI
+@@ -246,13 +252,14 @@ func CreateMetaInfo(info *metainfo.Info, mi *metainfo.MetaInfo) (*metainfo.MetaI
  			return nil, err
  		}
  		mi = &metainfo.MetaInfo{
@@ -31,3 +31,10 @@ index f89150127d..b1f9afd58b 100644
  			// TODO: Differentiate direct web source vs generated locally.
  			CreatedBy:    "erigon",
  			InfoBytes:    infoBytes,
+ 			AnnounceList: Trackers,
+ 		}
+ 	} else {
++		mi.CreationDate = ErigonGenesisTimestamp,
+ 		mi.AnnounceList = Trackers
+ 	}
+ 	return mi, nil
