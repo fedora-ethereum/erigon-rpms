@@ -25,7 +25,7 @@ Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
 Assisted-by: Claude (Anthropic) <https://claude.ai>
 
 diff --git a/db/state/aggregator.go b/db/state/aggregator.go
-index 7d9706fb37..f9b4eff34b 100644
+index 4579a0fe30..38a6b6e093 100644
 --- a/db/state/aggregator.go
 +++ b/db/state/aggregator.go
 @@ -27,6 +27,7 @@ import (
