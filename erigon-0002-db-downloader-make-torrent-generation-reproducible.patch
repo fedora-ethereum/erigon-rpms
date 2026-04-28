@@ -1,3 +1,4 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Peter Lemenkov <lemenkov@gmail.com>
 Date: Tue, 13 Jan 2026 21:26:34 +0100
 Subject: [PATCH] db/downloader: make torrent generation reproducible
@@ -6,10 +7,10 @@ Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
 Assisted-by: Claude (Anthropic) <https://claude.ai>
 
 diff --git a/db/downloader/util.go b/db/downloader/util.go
-index f89150127d..8ceedd00ad 100644
+index c38bd8793f..d3a8eb0356 100644
 --- a/db/downloader/util.go
 +++ b/db/downloader/util.go
-@@ -239,6 +239,12 @@ Loop:
+@@ -240,6 +240,12 @@ Loop:
  	return int(createdAmount.Load()), nil
  }
  
@@ -22,7 +23,7 @@ index f89150127d..8ceedd00ad 100644
  func CreateMetaInfo(info *metainfo.Info, mi *metainfo.MetaInfo) (*metainfo.MetaInfo, error) {
  	if mi == nil {
  		infoBytes, err := bencode.Marshal(info)
-@@ -246,13 +252,14 @@ func CreateMetaInfo(info *metainfo.Info, mi *metainfo.MetaInfo) (*metainfo.MetaI
+@@ -247,13 +253,14 @@ func CreateMetaInfo(info *metainfo.Info, mi *metainfo.MetaInfo) (*metainfo.MetaI
  			return nil, err
  		}
  		mi = &metainfo.MetaInfo{

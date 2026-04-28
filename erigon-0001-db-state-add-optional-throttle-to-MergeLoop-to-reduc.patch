@@ -1,3 +1,4 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Peter Lemenkov <lemenkov@gmail.com>
 Date: Mon, 29 Dec 2025 02:45:03 +0100
 Subject: [PATCH] db/state: add optional throttle to MergeLoop to reduce disk
@@ -25,7 +26,7 @@ Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
 Assisted-by: Claude (Anthropic) <https://claude.ai>
 
 diff --git a/db/state/aggregator.go b/db/state/aggregator.go
-index 4579a0fe30..38a6b6e093 100644
+index 5d980ac821..470d1a0527 100644
 --- a/db/state/aggregator.go
 +++ b/db/state/aggregator.go
 @@ -27,6 +27,7 @@ import (
@@ -36,7 +37,7 @@ index 4579a0fe30..38a6b6e093 100644
  	"sync"
  	"sync/atomic"
  	"time"
-@@ -871,6 +872,15 @@ func (a *Aggregator) RemoveOverlapsAfterMerge(ctx context.Context) (err error) {
+@@ -1049,6 +1050,15 @@ func (a *Aggregator) RemoveOverlapsAfterMerge(ctx context.Context) (err error) {
  	return nil
  }
  
@@ -52,7 +53,7 @@ index 4579a0fe30..38a6b6e093 100644
  func (a *Aggregator) MergeLoop(ctx context.Context) (err error) {
  	if dbg.NoMerge() || !a.mergingFiles.CompareAndSwap(false, true) {
  		return nil // currently merging or merge is prohibited
-@@ -888,6 +898,11 @@ func (a *Aggregator) MergeLoop(ctx context.Context) (err error) {
+@@ -1066,6 +1076,11 @@ func (a *Aggregator) MergeLoop(ctx context.Context) (err error) {
  	defer a.wg.Done()
  	defer a.mergingFiles.Store(false)
  
@@ -64,7 +65,7 @@ index 4579a0fe30..38a6b6e093 100644
  	for {
  		somethingMerged, err := a.mergeLoopStep(ctx, a.visibleFilesMinimaxTxNum.Load())
  		if err != nil {
-@@ -896,6 +911,14 @@ func (a *Aggregator) MergeLoop(ctx context.Context) (err error) {
+@@ -1074,6 +1089,14 @@ func (a *Aggregator) MergeLoop(ctx context.Context) (err error) {
  		if !somethingMerged {
  			return nil
  		}
