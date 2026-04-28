@@ -38,10 +38,10 @@ index 32576d749f..6f5ffe7a9f 100644
  	TraceStateKeys        = EnvStrings("TRACE_STATE_KEYS", ",", nil)
  	TraceInstructions     = EnvBool("TRACE_INSTRUCTIONS", false)
 diff --git a/db/state/aggregator.go b/db/state/aggregator.go
-index 470d1a0527..6998886f58 100644
+index 470d1a0527..4440838ffd 100644
 --- a/db/state/aggregator.go
 +++ b/db/state/aggregator.go
-@@ -1875,6 +1875,26 @@ func (a *Aggregator) buildFilesInBackground(txNum uint64, doMerge bool) chan str
+@@ -1875,6 +1875,27 @@ func (a *Aggregator) buildFilesInBackground(txNum uint64, doMerge bool) chan str
  			lastIdInDB(a.db, a.d[kv.CommitmentDomain]))
  		a.logger.Info("BuildFilesInBackground", "step", step, "lastInDB", lastInDB)
  
@@ -63,7 +63,8 @@ index 470d1a0527..6998886f58 100644
 +				close(fin)
 +				return
 +			case <-timer.C:
-+}
++			}
++		}
 +
  		// check if db has enough data (maybe we didn't commit them yet or all keys are unique so history is empty)
  		hasData := lastInDB > step // `step` must be fully-written - means `step+1` records must be visible
