@@ -25,7 +25,7 @@ Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
 Assisted-by: Claude (Anthropic) <https://claude.ai>
 
 diff --git a/common/dbg/experiments.go b/common/dbg/experiments.go
-index 32576d749f..6f5ffe7a9f 100644
+index aa3ae26f90..eb8aa9b625 100644
 --- a/common/dbg/experiments.go
 +++ b/common/dbg/experiments.go
 @@ -85,6 +85,8 @@ var (
@@ -38,10 +38,10 @@ index 32576d749f..6f5ffe7a9f 100644
  	TraceStateKeys        = EnvStrings("TRACE_STATE_KEYS", ",", nil)
  	TraceInstructions     = EnvBool("TRACE_INSTRUCTIONS", false)
 diff --git a/db/state/aggregator.go b/db/state/aggregator.go
-index 470d1a0527..4440838ffd 100644
+index e69950f9a3..eed0168d2f 100644
 --- a/db/state/aggregator.go
 +++ b/db/state/aggregator.go
-@@ -1875,6 +1875,27 @@ func (a *Aggregator) buildFilesInBackground(txNum uint64, doMerge bool) chan str
+@@ -1907,6 +1907,27 @@ func (a *Aggregator) buildFilesInBackground(txNum uint64, doMerge bool) chan str
  			lastIdInDB(a.db, a.d[kv.CommitmentDomain]))
  		a.logger.Info("BuildFilesInBackground", "step", step, "lastInDB", lastInDB)
  
