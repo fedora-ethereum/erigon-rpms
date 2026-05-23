@@ -38,10 +38,10 @@ index aa3ae26f90..eb8aa9b625 100644
  	TraceStateKeys        = EnvStrings("TRACE_STATE_KEYS", ",", nil)
  	TraceInstructions     = EnvBool("TRACE_INSTRUCTIONS", false)
 diff --git a/db/state/aggregator.go b/db/state/aggregator.go
-index e69950f9a3..eed0168d2f 100644
+index 15dd59d838..8bbfc0efd1 100644
 --- a/db/state/aggregator.go
 +++ b/db/state/aggregator.go
-@@ -1907,6 +1907,27 @@ func (a *Aggregator) buildFilesInBackground(txNum uint64, doMerge bool) chan str
+@@ -1938,6 +1938,27 @@ func (a *Aggregator) buildFilesInBackground(txNum uint64, doMerge bool) chan str
  			lastIdInDB(a.db, a.d[kv.CommitmentDomain]))
  		a.logger.Info("BuildFilesInBackground", "step", step, "lastInDB", lastInDB)
  
