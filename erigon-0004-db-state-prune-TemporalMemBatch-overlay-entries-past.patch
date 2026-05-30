@@ -1,0 +1,247 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Mark Holt <135143369+mh0lt@users.noreply.github.com>
+Date: Fri, 17 Apr 2026 17:26:42 +0200
+Subject: [PATCH] db/state: prune TemporalMemBatch overlay entries past
+ unwindToTxNum (#20625)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+## Summary
+
+Fix a post-unwind stale-read in the in-memory domain overlay that causes
+gas-used mismatches on post-Fusaka mainnet catch-up.
+
+`TemporalMemBatch` stores per-key overlay writes as `[]dataWithTxNum`,
+each entry stamped with its write `txNum`. `getLatest` returns
+`dataWithTxNums[len-1]` — the most recently appended entry — without
+comparing it against `sd.unwindToTxNum`. `Unwind()` only recorded
+`unwindToTxNum` + an `unwindChangeset`; it never touched `sd.domains` /
+`sd.storage`. Since `unwindChangeset` is consulted only when the overlay
+misses, any key still present in the overlay kept returning a pre-unwind
+write made *inside* the unwound `txNum` range.
+
+## Observed symptom
+
+Post-Fusaka mainnet catch-up, after a forkchoice-driven unwind. The
+first re-executed block reads a storage slot that was first-written
+inside the unwound range. The overlay returns the post-target write,
+flipping the SSTORE cost from `SET (20000)` to `RESET (2900)` —
+**exactly a 17100-gas shortfall per affected slot**.
+
+- Block 24,898,955: `diff=-34200` (2 slots × 17100)
+- Block 24,899,403: `diff=-73829` (compound — several slots affected)
+
+Live trace instrumentation (not shipped) captured 3,082 `SD_STALE_READ`
+events between an unwind at `txNum=3454259398` and the resulting
+mismatch at block 24,899,403.
+
+## Fix
+
+On `Unwind`, walk `sd.domains` and `sd.storage` and drop any
+`dataWithTxNum` whose `txNum > unwindToTxNum`. If a key's slice empties
+out, delete the key so the `unwindChangeset` fallback (or the underlying
+tx) supplies the pre-unwind answer. Runs under `sd.latestStateLock` so
+the transition is atomic to concurrent reads. Storage-btree mutations
+are staged after `Scan` to respect btree iterator rules.
+
+## Regression test
+
+`TestSharedDomain_UnwindDoesNotRestoreOverlayForNewKey` in
+`db/state/execctx/domain_shared_test.go`:
+- writes a first-time storage value at `txNum=100`
+- calls `Unwind(50)`
+- asserts the overlay no longer returns the post-target write
+
+Test fails on pre-fix code with the exact error that mirrors the mainnet
+symptom; passes with this change.
+
+## Test plan
+
+- [x] `go test -short ./db/state/...` — all pass
+- [x] `make lint` — 0 issues
+- [x] `make erigon` — builds clean
+- [ ] Manual sync verification: post-Fusaka mainnet with `chaindata/`
+wiped and `snapshots/` retained (same repro that produced
+block-24,899,403 mismatch) — sync progresses past the catch-up /
+first-forkchoice-unwind window without a gas mismatch.
+
+## Known adjacent issues, out of scope
+
+DB-layer siblings of this bug exist separately and are *not* addressed
+here:
+
+1. `db/state/domain.go:1317` — on-disk unwind currently conflates `nil`
+("different step, skip") and `[]byte{}` ("key was absent, write
+tombstone") via `if len(value) > 0`, so first-time writes in the unwound
+range leave no restoring tombstone.
+2. `db/state/domain.go:1665` — `getLatestFromDb` discards deletion
+markers at a step within file range, so the caller falls through to
+`getLatestFromFiles`, which has no concept of deletions and returns
+stale pre-deletion data.
+
+Both were previously addressed by #20483 and reverted by #20509 while
+regressions were investigated. They need their own narrower fixes with
+dedicated regression guards and should be staged as separate PRs so
+they're independently revertible.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+
+diff --git a/db/state/execctx/domain_shared_test.go b/db/state/execctx/domain_shared_test.go
+index 2b4e0f3f36..802213021a 100644
+--- a/db/state/execctx/domain_shared_test.go
++++ b/db/state/execctx/domain_shared_test.go
+@@ -170,6 +170,86 @@ Loop:
+ 	goto Loop
+ }
+ 
++// TestSharedDomain_UnwindDoesNotRestoreOverlayForNewKey reproduces the
++// mainnet block-24898955 gas-used mismatch (diff = -17100 = SSTORE_RESET -
++// SSTORE_SET). After a forkchoice-driven unwind, the TemporalMemBatch overlay
++// still holds storage writes made INSIDE the unwound txNum range, because:
++//
++//   - `Unwind` stores `sd.unwindToTxNum` and `sd.unwindChangeset` but does
++//     NOT remove post-target entries from `sd.storage` / `sd.domains[...]`.
++//   - `getLatest` returns `dataWithTxNums[len(...)-1]` without comparing
++//     its txNum against `sd.unwindToTxNum`.
++//   - The `unwindChangeset` fallback only fires on an overlay miss.
++//
++// So a first-time storage write at `txNum=T_write > T_unwind` remains visible
++// after `Unwind(T_unwind)`, and a re-executed SSTORE on that slot charges
++// SSTORE_RESET (2900) instead of SSTORE_SET (20000) — the observed 17100 diff.
++func TestSharedDomain_UnwindDoesNotRestoreOverlayForNewKey(t *testing.T) {
++	if testing.Short() {
++		t.Skip()
++	}
++	t.Parallel()
++
++	stepSize := uint64(100)
++	db := newTestDb(t, stepSize)
++	ctx := context.Background()
++
++	rwTx, err := db.BeginTemporalRw(ctx)
++	require.NoError(t, err)
++	defer rwTx.Rollback()
++
++	domains, err := execctx.NewSharedDomains(ctx, rwTx, log.New())
++	require.NoError(t, err)
++	defer domains.Close()
++
++	stateChangeset := &changeset.StateChangeSet{}
++	domains.SetChangesetAccumulator(stateChangeset)
++
++	// Storage key mirrors a USDT balance slot: 20-byte address + 32-byte slot hash.
++	addr := common.HexToAddress("0xdac17f958d2ee523a2206206994597c13d831ec7")
++	slot := common.HexToHash("0x5ac7102aad1a639901bc2657323aaed9e90e40c550747c49170f1c82fd664e4f")
++	key := composite(addr[:], slot[:])
++	value := []byte{0x01, 0x02, 0x03, 0x04}
++
++	const unwindTarget uint64 = 50 // pre-write txNum where slot is absent
++	const writeTxNum uint64 = 100  // txNum inside a block that will be unwound
++
++	// 1. Precondition: slot is absent at the unwind target.
++	domains.SetTxNum(unwindTarget)
++	v, _, err := domains.GetLatest(kv.StorageDomain, rwTx, key)
++	require.NoError(t, err)
++	require.Empty(t, v, "precondition: slot must be absent before any writes")
++
++	// 2. Advance txNum and write the slot for the first time (prevVal = nil).
++	domains.SetTxNum(writeTxNum)
++	require.NoError(t, domains.DomainPut(kv.StorageDomain, rwTx, key, value, writeTxNum, nil))
++
++	// 3. Sanity: write is visible through the overlay.
++	v, _, err = domains.GetLatest(kv.StorageDomain, rwTx, key)
++	require.NoError(t, err)
++	require.Equal(t, value, v, "sanity: write must be visible pre-unwind")
++
++	// 4. Build the domain diff set from the accumulator, then unwind past the write.
++	var diffSet [kv.DomainLen][]kv.DomainEntryDiff
++	for idx, d := range stateChangeset.Diffs {
++		diffSet[idx] = d.GetDiffSet()
++	}
++	domains.Unwind(unwindTarget, &diffSet)
++
++	// 5. Simulate re-execution starting at the unwind target.
++	domains.SetTxNum(unwindTarget)
++
++	// 6. Failing assertion: the slot must be absent again.
++	v, _, err = domains.GetLatest(kv.StorageDomain, rwTx, key)
++	require.NoError(t, err)
++	require.Empty(t, v,
++		"after Unwind(txNum=%d), overlay must not return the write made at txNum=%d (got %x). "+
++			"TemporalMemBatch.getLatest returns the latest entry from sd.storage without "+
++			"consulting sd.unwindToTxNum, and the unwindChangeset fallback is unreachable "+
++			"while the key remains in sd.storage.",
++		unwindTarget, writeTxNum, v)
++}
++
+ // TestNewSharedDomains_StateAheadOfBlocks verifies that when the persisted
+ // commitment state is ahead of the TxNums index (catch-up scenario),
+ // NewSharedDomains returns ErrBehindCommitment but the SharedDomains itself
+diff --git a/db/state/temporal_mem_batch.go b/db/state/temporal_mem_batch.go
+index 407c291e68..482f5a9e6d 100644
+--- a/db/state/temporal_mem_batch.go
++++ b/db/state/temporal_mem_batch.go
+@@ -413,7 +413,60 @@ func (sd *TemporalMemBatch) GetDiffset(tx kv.RwTx, blockHash common.Hash, blockN
+ }
+ 
+ func (sd *TemporalMemBatch) Unwind(unwindToTxNum uint64, changeset *[kv.DomainLen][]kv.DomainEntryDiff) {
++	sd.latestStateLock.Lock()
++	defer sd.latestStateLock.Unlock()
++
+ 	sd.unwindToTxNum = unwindToTxNum
++
++	// Drop overlay entries stamped with txNum > unwindToTxNum. Without this,
++	// getLatest returns entries written inside the unwound range because it
++	// picks dataWithTxNums[len-1] without consulting sd.unwindToTxNum — the
++	// unwindChangeset fallback below is only reachable on an overlay miss.
++	// Observed as post-Fusaka gas-used mismatches after forkchoice-driven
++	// unwinds (an SSTORE on a slot first-written inside the unwound range
++	// charges SSTORE_RESET instead of SSTORE_SET — a 17100 gas shortfall
++	// per slot). Keys whose slice empties out are removed so the
++	// unwindChangeset fallback can supply the pre-unwind answer.
++	pruneSlice := func(entries []dataWithTxNum) []dataWithTxNum {
++		kept := entries[:0]
++		for _, e := range entries {
++			if e.txNum <= unwindToTxNum {
++				kept = append(kept, e)
++			}
++		}
++		return kept
++	}
++	for d := range sd.domains {
++		for k, entries := range sd.domains[d] {
++			kept := pruneSlice(entries)
++			if len(kept) == 0 {
++				delete(sd.domains[d], k)
++			} else {
++				sd.domains[d][k] = kept
++			}
++		}
++	}
++	// Collect first, mutate after: btree.Scan doesn't allow Set/Delete during traversal.
++	type storageEdit struct {
++		key  string
++		kept []dataWithTxNum
++	}
++	var edits []storageEdit
++	sd.storage.Scan(func(k string, entries []dataWithTxNum) bool {
++		kept := pruneSlice(entries)
++		if len(kept) != len(entries) {
++			edits = append(edits, storageEdit{k, kept})
++		}
++		return true
++	})
++	for _, e := range edits {
++		if len(e.kept) == 0 {
++			sd.storage.Delete(e.key)
++		} else {
++			sd.storage.Set(e.key, e.kept)
++		}
++	}
++
+ 	var unwindChangeset *[kv.DomainLen]map[string]kv.DomainEntryDiff
+ 	var unwindChangesetRaw *[kv.DomainLen][]kv.DomainEntryDiff
+ 
