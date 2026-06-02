@@ -1,7 +1,7 @@
-%global git_commit aebbd15beea221a3032506f345070ab357d9f786
+%global git_commit c045521fae81d966baea9346897d6dd8e70a21ee
 
 Name:           erigon
-Version:        3.4.2
+Version:        3.4.3
 Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPL-3.0-only
@@ -13,7 +13,6 @@ Source2:        erigon.sysusers
 Patch:          erigon-0001-db-state-add-optional-throttle-to-MergeLoop-to-reduc.patch
 Patch:          erigon-0002-db-downloader-make-torrent-generation-reproducible.patch
 Patch:          erigon-0003-snapshots-add-AGGREGATION_DELAY_MS-to-stagger-backgr.patch
-Patch:		erigon-0004-db-state-prune-TemporalMemBatch-overlay-entries-past.patch
 BuildRequires: firewalld-filesystem
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
