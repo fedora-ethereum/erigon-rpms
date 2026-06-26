@@ -1,4 +1,4 @@
-%global git_commit 5da2eae7f6fc2ea7f296a5a960d262749f3546a4
+%global git_commit 7e8c1eff200590e5cc16604318ab82d25c9a30aa
 
 Name:           erigon
 Version:        3.4.4
@@ -10,9 +10,7 @@ VCS:            git:%{url}.git
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
 Source2:        erigon.sysusers
-Patch:          erigon-0001-db-state-add-optional-throttle-to-MergeLoop-to-reduc.patch
-Patch:          erigon-0002-db-downloader-make-torrent-generation-reproducible.patch
-Patch:          erigon-0003-snapshots-add-AGGREGATION_DELAY_MS-to-stagger-backgr.patch
+Patch:          erigon-0001-db-downloader-make-torrent-generation-reproducible.patch
 BuildRequires: firewalld-filesystem
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
