@@ -1,11 +1,11 @@
-%global git_commit 0c4d9c91dbaffd52890235f7ea395b0231738501
+%global git_commit bdc78cc4377c8ebf3a44c5646a4d4cdcd7afad74
 
 Name:           erigon
-Version:        3.6.1
+Version:        3.7.0
 Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPL-3.0-only
-URL:            https://github.com/ledgerwatch/erigon
+URL:            https://github.com/erigontech/erigon
 VCS:            git:%{url}.git
 Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 Source1:        https://github.com/fedora-ethereum/%{name}-rpms/archive/v%{version}/%{name}-rpms-%{version}.tar.gz
