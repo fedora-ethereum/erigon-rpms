@@ -1,3 +1,4 @@
+%global _debugsource_packages 0
 %global git_commit bdc78cc4377c8ebf3a44c5646a4d4cdcd7afad74
 
 Name:           erigon
