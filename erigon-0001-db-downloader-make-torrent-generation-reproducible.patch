@@ -7,7 +7,7 @@ Signed-off-by: Peter Lemenkov <lemenkov@gmail.com>
 Assisted-by: Claude (Anthropic) <https://claude.ai>
 
 diff --git a/db/downloader/util.go b/db/downloader/util.go
-index d70e998538..9e584effda 100644
+index c3a66cc87e..21cf9f4c80 100644
 --- a/db/downloader/util.go
 +++ b/db/downloader/util.go
 @@ -238,6 +238,12 @@ Loop:

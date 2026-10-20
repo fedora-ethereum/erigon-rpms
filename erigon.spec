@@ -1,8 +1,8 @@
 %global _debugsource_packages 0
-%global git_commit 8c1e3893d77d230720d172f1492d95b5777a862c
+%global git_commit 7539da15473efd23e1d7d2660ad39782b3137e6f
 
 Name:           erigon
-Version:        3.7.1
+Version:        3.8.0
 Release:        %autorelease
 Summary:        A very efficient next-generation Ethereum execution client
 License:        LGPL-3.0-only
